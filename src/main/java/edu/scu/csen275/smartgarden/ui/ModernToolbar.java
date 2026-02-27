@@ -22,7 +22,7 @@ public class ModernToolbar extends HBox {
         this.getStyleClass().add("toolbar");
         
         // Title with icon (simplified - no duplicate text)
-        Label title = new Label("🌿 Smart Garden");
+        Label title = new Label("Smart Garden");
         title.getStyleClass().add("title-label");
         
         // Separator

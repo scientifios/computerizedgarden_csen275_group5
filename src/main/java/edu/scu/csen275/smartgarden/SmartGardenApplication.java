@@ -283,7 +283,7 @@ public class SmartGardenApplication extends Application {
         logPanel.setVisible(true); // Ensure visible
         logPanel.setManaged(true); // Ensure managed
         
-        Label logTitle = new Label("📋 Recent Events");
+        Label logTitle = new Label("Recent Events");
         logTitle.getStyleClass().add("log-title");
         
         logListView = new ListView<>();
