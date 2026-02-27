@@ -40,26 +40,27 @@ public class PlantTest {
 
     @Test
     void testWaterConsumption() {
-        plant.update(); // 1 tick
-        assertEquals(99, plant.getWaterLevel());
+        plant.update(); // 1 tick: consume every 5 ticks
+        assertEquals(100, plant.getWaterLevel());
 
         // Simulate 50 ticks
         for (int i = 0; i < 50; i++) {
             plant.update();
         }
-        assertEquals(49, plant.getWaterLevel());
+        // Total ticks = 51, so water consumed = floor(51/5) = 10
+        assertEquals(90, plant.getWaterLevel());
     }
 
     @Test
     void testHealthDegradationWhenDry() {
-        // Drain water
-        for (int i = 0; i < 100; i++) {
+        // Drain to a low-water state (below half requirement)
+        for (int i = 0; i < 260; i++) {
             plant.update();
         }
-        assertEquals(0, plant.getWaterLevel());
+        assertTrue(plant.getWaterLevel() < plant.getWaterRequirement() / 2);
 
         int initialHealth = plant.getHealthLevel();
-        plant.update(); // Should take damage due to 0 water
+        plant.update(); // Should take damage due to low water
         assertTrue(plant.getHealthLevel() < initialHealth);
     }
 
@@ -72,7 +73,7 @@ public class PlantTest {
         int waterLevel = plant.getWaterLevel();
 
         plant.water(20);
-        assertEquals(waterLevel + 20, plant.getWaterLevel());
+        assertEquals(Math.min(100, waterLevel + 20), plant.getWaterLevel());
     }
 
     @Test

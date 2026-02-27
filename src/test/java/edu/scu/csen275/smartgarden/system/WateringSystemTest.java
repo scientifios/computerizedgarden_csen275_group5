@@ -52,9 +52,9 @@ public class WateringSystemTest {
         int initialSupply = wateringSystem.getWaterSupply();
         wateringSystem.waterZone(1, 100);
         
-        // The Sprinkler distributes water at flowRate (10L/min) per plant
-        // With 1 plant, only 10L is actually used regardless of requested amount
-        int expectedUsed = 10; // flowRate per plant
+        // The Sprinkler distributes water at flowRate (5L/min) per plant
+        // With 1 plant, only 5L is actually used regardless of requested amount
+        int expectedUsed = 5; // flowRate per plant
         assertEquals(initialSupply - expectedUsed, wateringSystem.getWaterSupply());
     }
 
