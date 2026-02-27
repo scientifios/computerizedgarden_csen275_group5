@@ -1,0 +1,144 @@
+@startuml SimulationTick_Activity
+
+start
+
+:Increment simulation time;
+:Increment tick counter;
+
+partition "Update Weather" {
+    :Check weather duration;
+    if (Weather change due?) then (yes)
+        :Generate new weather;
+        :Apply weather effects to plants;
+        :Log weather change;
+    else (no)
+        :Continue current weather;
+    endif
+}
+
+partition "Update Plants" {
+    :Get all living plants;
+    
+    fork
+        :Update plant growth;
+        :Check growth stage advancement;
+        if (Stage advanced?) then (yes)
+            :Change to next stage;
+            :Update visual representation;
+            :Log growth event;
+        endif
+    fork again
+        :Calculate health factors;
+        :Apply water level effect;
+        :Apply temperature effect;
+        :Apply pest damage;
+        :Apply weather modifier;
+        if (Health critical?) then (yes)
+            :Change color to red;
+            :Log warning;
+        endif
+    fork again
+        :Decrement water level;
+        if (Water depleted?) then (yes)
+            :Reduce health;
+        endif
+    end fork
+    
+    :Check for plant death;
+    if (Health <= 0?) then (yes)
+        :Mark plant as dead;
+        :Update visual to withered;
+        :Log death with cause;
+    endif
+}
+
+partition "Watering System" {
+    if (Watering cycle due?) then (yes)
+        :Check current weather;
+        if (Weather = RAINY?) then (yes)
+            :Stop all sprinklers;
+            :Skip watering (rain provides moisture);
+            :Log "Skipping watering - rain detected";
+        else (no)
+            fork
+                :Read moisture sensors;
+            fork again
+                :Check water supply;
+            end fork
+            
+            :Identify zones needing water;
+            
+            if (Zones need water?) then (yes)
+                :For each zone;
+                :Activate sprinkler;
+                :Distribute water to plants;
+                :Update moisture level;
+                :Log watering action;
+                :Deactivate sprinkler;
+            endif
+        endif
+    endif
+}
+
+partition "Heating System" {
+    :Read temperature sensors;
+    if (Temperature < min threshold?) then (yes)
+        :Activate heating;
+        :Increase temperature;
+        :Apply warmth to plants;
+        :Log heating activation;
+    else if (Temperature > max threshold?) then (yes)
+        :Deactivate heating;
+        :Allow cooling;
+        :Log heating deactivation;
+    endif
+}
+
+partition "Pest Control" {
+    if (Pest spawn check?) then (spawn)
+        :Create random harmful pest;
+        :Place in random zone;
+        :Log pest appearance;
+    endif
+    
+    :Scan all zones for pests;
+    :Update infestation levels;
+    
+    if (High infestation detected?) then (yes)
+        :Apply pesticide treatment;
+        :Reduce pest count (harmful pests only);
+        :Heal affected plants;
+        :Log treatment;
+    endif
+    
+    :Apply ongoing pest damage;
+}
+
+partition "Random Events" {
+    :Generate random number;
+    if (Event triggered?) then (yes)
+        fork
+            :Pest outbreak;
+        fork again
+            :Sudden weather change;
+        fork again
+            :Equipment check;
+        end fork
+        :Log event;
+    endif
+}
+
+partition "UI Update" {
+    :Update garden grid visuals;
+    :Update status displays;
+    :Update progress bars;
+    :Add log entries to UI;
+    :Refresh time display;
+}
+
+:Schedule next tick;
+
+stop
+
+@enduml
+

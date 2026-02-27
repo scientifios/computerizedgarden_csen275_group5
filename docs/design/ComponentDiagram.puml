@@ -1,0 +1,157 @@
+@startuml SmartGarden_ComponentDiagram
+
+!define COMPONENT_BG_COLOR #E1F5FE
+!define INTERFACE_COLOR #01579B
+
+' External Systems
+cloud "User" as User
+
+' Main Application
+package "Smart Garden Application" {
+    
+    ' Presentation Layer
+    package "Presentation Layer" <<Rectangle>> {
+        component [JavaFX UI] as UI COMPONENT_BG_COLOR
+        component [FXML Views] as FXML COMPONENT_BG_COLOR
+        component [View Controllers] as ViewControllers COMPONENT_BG_COLOR
+    }
+    
+    ' Application Layer
+    package "Application Layer" <<Rectangle>> {
+        component [Garden Controller] as GardenController COMPONENT_BG_COLOR
+        component [Simulation Controller] as SimController COMPONENT_BG_COLOR
+    }
+    
+    ' Domain Layer
+    package "Domain Layer" <<Rectangle>> {
+        component [Garden Model] as GardenModel COMPONENT_BG_COLOR
+        component [Plant Model] as PlantModel COMPONENT_BG_COLOR
+        component [Simulation Engine] as SimEngine COMPONENT_BG_COLOR
+    }
+    
+    ' System Layer
+    package "Automation Systems" <<Rectangle>> {
+        component [Watering System] as WaterSys COMPONENT_BG_COLOR
+        component [Heating System] as HeatSys COMPONENT_BG_COLOR
+        component [Pest Control System] as PestSys COMPONENT_BG_COLOR
+        component [Weather System] as WeatherSys COMPONENT_BG_COLOR
+    }
+    
+    ' Infrastructure Layer
+    package "Infrastructure Layer" <<Rectangle>> {
+        component [Logger] as Logger COMPONENT_BG_COLOR
+        component [Configuration] as Config COMPONENT_BG_COLOR
+        component [Event Scheduler] as EventScheduler COMPONENT_BG_COLOR
+    }
+    
+    ' Sensor Layer
+    package "Sensor Components" <<Rectangle>> {
+        component [Moisture Sensors] as MoistureSensor COMPONENT_BG_COLOR
+        component [Temperature Sensors] as TempSensor COMPONENT_BG_COLOR
+        component [Pest Detectors] as PestDetector COMPONENT_BG_COLOR
+    }
+}
+
+' External Storage
+database "Log Files" as LogFiles {
+    folder "Session Logs"
+}
+
+folder "Configuration Files" as ConfigFiles {
+    file "application.properties"
+}
+
+' Interfaces
+interface "IAutomationSystem" as IAutoSys INTERFACE_COLOR
+interface "ISensor" as ISensor INTERFACE_COLOR
+interface "IPlant" as IPlant INTERFACE_COLOR
+interface "ILoggable" as ILoggable INTERFACE_COLOR
+
+' User interactions
+User --> UI : interacts with
+
+' Presentation Layer relationships
+UI ..> FXML : loads
+UI --> ViewControllers : uses
+ViewControllers --> GardenController : calls
+
+' Application Layer relationships
+GardenController --> SimController : controls
+GardenController --> GardenModel : manages
+GardenController --> Logger : logs to
+
+' Simulation relationships
+SimController --> SimEngine : starts/stops
+SimEngine --> GardenModel : updates
+SimEngine --> EventScheduler : schedules events
+SimEngine --> WaterSys : updates
+SimEngine --> HeatSys : updates
+SimEngine --> PestSys : updates
+SimEngine --> WeatherSys : updates
+
+' Domain Layer relationships
+GardenModel --> PlantModel : contains
+PlantModel ..|> IPlant : implements
+
+' System Layer relationships
+WaterSys ..|> IAutoSys : implements
+HeatSys ..|> IAutoSys : implements
+PestSys ..|> IAutoSys : implements
+WeatherSys ..|> IAutoSys : implements
+
+WaterSys --> MoistureSensor : reads from
+WaterSys --> GardenModel : waters plants
+WaterSys --> Logger : logs events
+
+HeatSys --> TempSensor : reads from
+HeatSys --> GardenModel : adjusts temperature
+HeatSys --> Logger : logs events
+
+PestSys --> PestDetector : reads from
+PestSys --> GardenModel : treats plants
+PestSys --> Logger : logs events
+
+WeatherSys --> GardenModel : affects plants
+WeatherSys --> Logger : logs events
+
+' Sensor relationships
+MoistureSensor ..|> ISensor : implements
+TempSensor ..|> ISensor : implements
+PestDetector ..|> ISensor : implements
+
+' Infrastructure relationships
+Logger --> LogFiles : writes to
+Config --> ConfigFiles : reads from
+
+WaterSys ..|> ILoggable : implements
+HeatSys ..|> ILoggable : implements
+PestSys ..|> ILoggable : implements
+SimEngine ..|> ILoggable : implements
+
+' Notes
+note right of SimEngine
+    Multi-threaded component
+    Coordinates all systems
+    Manages time progression
+end note
+
+note bottom of WaterSys
+    Zone-based watering
+    Automatic and manual modes
+    Water consumption tracking
+end note
+
+note left of Logger
+    Thread-safe logging
+    File rotation support
+    Multiple log levels
+end note
+
+note top of UI
+    JavaFX Application
+    Real-time updates
+    Color-coded visualization
+end note
+
+@enduml
+

@@ -1,0 +1,86 @@
+@startuml PlantLifecycle_StateDiagram
+
+[*] --> Seed : Plant placed
+
+state Seed {
+    Seed : Water level: 0%
+    Seed : Health: 100%
+    Seed : Days in stage: 0
+    --
+    Seed : Waiting for water
+}
+
+state Seedling {
+    Seedling : Water level: variable
+    Seedling : Health: variable
+    Seedling : Days in stage: 0
+    --
+    Seedling : Growing slowly
+}
+
+state Mature {
+    Mature : Water level: variable
+    Mature : Health: variable
+    Mature : Producing energy
+    --
+    Mature : Optimal growth phase
+}
+
+state Flowering {
+    Flowering : Water level: variable
+    Flowering : Health: variable
+    Flowering : Producing blooms/fruit
+    --
+    Flowering : Peak productivity
+}
+
+state Dying {
+    Dying : Health: < 20%
+    Dying : Visibly withered
+    --
+    Dying : Critical condition
+}
+
+state Dead {
+    Dead : Health: 0%
+    Dead : No longer growing
+    --
+    Dead : Awaiting removal
+}
+
+Seed --> Seedling : Water received\n& Days >= growth threshold
+Seed --> Dying : No water for extended period
+
+Seedling --> Mature : Growth conditions met\n& Days >= threshold
+Seedling --> Dying : Health drops below 20%
+
+Mature --> Flowering : Growth complete\n& Conditions optimal
+Mature --> Dying : Health drops below 20%
+
+Flowering --> Mature : Seasonal cycle\n(for perennials)
+Flowering --> Dying : Health drops below 20%\nor Lifespan exceeded
+
+Dying --> Dead : Health reaches 0
+Dying --> Mature : Recovery:\nWatered + Fed + Treated
+
+Dead --> [*] : Removed from garden
+
+note right of Seed
+  Initial state when plant
+  is first placed in garden
+end note
+
+note right of Dying
+  Plant can be saved if
+  proper care is provided
+  quickly
+end note
+
+note bottom of Dead
+  Plant remains visible
+  for a decay period
+  before removal
+end note
+
+@enduml
+

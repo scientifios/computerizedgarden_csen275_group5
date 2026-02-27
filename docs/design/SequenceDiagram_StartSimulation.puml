@@ -1,0 +1,104 @@
+@startuml StartSimulation_Sequence
+
+actor User
+participant "MainViewController" as View
+participant "GardenController" as Controller
+participant "SimulationEngine" as Engine
+participant "WateringSystem" as Water
+participant "HeatingSystem" as Heat
+participant "PestControlSystem" as Pest
+participant "WeatherSystem" as Weather
+participant "Logger" as Log
+
+User -> View: Click "Start" button
+activate View
+
+View -> Controller: startSimulation()
+activate Controller
+
+Controller -> Log: log(INFO, "Starting simulation...")
+activate Log
+Log --> Controller: 
+deactivate Log
+
+Controller -> Controller: validateGardenState()
+note right: Check if garden has plants
+
+alt Garden is valid
+    Controller -> Engine: start()
+    activate Engine
+    
+    Engine -> Engine: setState(RUNNING)
+    Engine -> Log: log(INFO, "Simulation engine started")
+    activate Log
+    Log --> Engine: 
+    deactivate Log
+    
+    Engine -> Water: initialize()
+    activate Water
+    Water -> Log: log(INFO, "Watering system initialized")
+    activate Log
+    Log --> Water: 
+    deactivate Log
+    Water --> Engine: 
+    deactivate Water
+    
+    Engine -> Heat: initialize()
+    activate Heat
+    Heat -> Log: log(INFO, "Heating system initialized")
+    activate Log
+    Log --> Heat: 
+    deactivate Log
+    Heat --> Engine: 
+    deactivate Heat
+    
+    Engine -> Pest: initialize()
+    activate Pest
+    Pest -> Log: log(INFO, "Pest control system initialized")
+    activate Log
+    Log --> Pest: 
+    deactivate Log
+    Pest --> Engine: 
+    deactivate Pest
+    
+    Engine -> Weather: initialize()
+    activate Weather
+    Weather -> Weather: setWeather(SUNNY)
+    Weather -> Log: log(INFO, "Weather: SUNNY")
+    activate Log
+    Log --> Weather: 
+    deactivate Log
+    Weather --> Engine: 
+    deactivate Weather
+    
+    Engine -> Engine: startTimeline()
+    note right: Begin tick cycle
+    
+    Engine --> Controller: Success
+    deactivate Engine
+    
+    Controller -> View: updateUIState(RUNNING)
+    View -> View: disableStartButton()
+    View -> View: enablePauseButton()
+    View -> View: enableStopButton()
+    
+    Controller --> View: Success
+    deactivate Controller
+    
+    View --> User: Display "Simulation Running"
+    deactivate View
+    
+else Garden is empty
+    Controller -> Log: log(WARNING, "Cannot start - garden is empty")
+    activate Log
+    Log --> Controller: 
+    deactivate Log
+    
+    Controller -> View: showError("Please add plants before starting")
+    View --> User: Display error dialog
+    deactivate Controller
+    deactivate View
+end
+
+@enduml
+

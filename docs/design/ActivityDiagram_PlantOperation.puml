@@ -1,0 +1,61 @@
+@startuml PlantOperation_Activity
+
+|User|
+start
+:Select plant type from menu;
+:Click on grid cell;
+
+|UI Controller|
+:Receive cell click event;
+:Get selected plant type;
+:Get cell position (row, col);
+
+|Garden Controller|
+:Validate plant type;
+
+if (Valid plant type?) then (no)
+    |UI Controller|
+    :Display error message;
+    stop
+else (yes)
+    :Check if position is empty;
+    
+    if (Cell occupied?) then (yes)
+        |UI Controller|
+        :Display "Cell already occupied";
+        stop
+    else (no)
+        :Create new plant instance;
+        note right
+            Use Factory Pattern
+            based on plant type
+        end note
+        
+        |Garden|
+        :Add plant to garden;
+        :Assign to appropriate zone;
+        
+        |Zone|
+        :Add plant to zone's list;
+        :Register with watering system;
+        :Register with heating system;
+        :Register with pest control;
+        
+        |Logger|
+        :Log planting event;
+        
+        |UI Controller|
+        :Create plant visual representation;
+        :Place in grid cell;
+        :Set initial color (green);
+        :Display plant tooltip;
+        
+        |User|
+        :See plant in garden;
+        
+        stop
+    endif
+endif
+
+@enduml
+

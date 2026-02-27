@@ -1,0 +1,122 @@
+@startuml AutomaticWatering_Sequence
+
+participant "SimulationEngine" as Engine
+participant "WateringSystem" as Water
+participant "Zone" as Zone
+participant "MoistureSensor" as Sensor
+participant "Sprinkler" as Sprinkler
+participant "Plant" as Plant
+participant "Logger" as Log
+
+Engine -> Engine: tick()
+activate Engine
+note right: Every 5 simulation minutes
+
+Engine -> Water: checkMoistureLevels()
+activate Water
+
+Water -> Water: checkWeather()
+note right: Check if raining\nbefore watering
+
+alt weather != RAINY
+    loop for each zone
+        Water -> Zone: getZoneId()
+        activate Zone
+        Zone --> Water: zoneId
+        deactivate Zone
+        
+        Water -> Sensor: readValue()
+        activate Sensor
+        Sensor -> Sensor: calculateMoisture()
+        Sensor --> Water: moistureLevel
+        deactivate Sensor
+        
+        alt moistureLevel < threshold
+        Water -> Log: log(INFO, "Zone X moisture low: Y%")
+        activate Log
+        Log --> Water: 
+        deactivate Log
+        
+        Water -> Zone: getPlantsNeedingWater()
+        activate Zone
+        Zone --> Water: plantList
+        deactivate Zone
+        
+        alt plantList not empty
+            Water -> Water: calculateWaterNeeded(zone)
+            note right: Based on plant count\nand requirements
+            
+            alt waterSupply sufficient
+                Water -> Sprinkler: activate()
+                activate Sprinkler
+                
+                Sprinkler -> Log: log(INFO, "Sprinkler activated for Zone X")
+                activate Log
+                Log --> Sprinkler: 
+                deactivate Log
+                
+                Sprinkler -> Sprinkler: distributeWater(amount, zone)
+                
+                loop for each plant in zone
+                    Sprinkler -> Plant: water(amount)
+                    activate Plant
+                    Plant -> Plant: updateWaterLevel()
+                    Plant -> Plant: updateHealth()
+                    Plant --> Sprinkler: 
+                    deactivate Plant
+                end
+                
+                Sprinkler -> Zone: updateMoisture(amount)
+                activate Zone
+                Zone --> Sprinkler: 
+                deactivate Zone
+                
+                Sprinkler -> Sprinkler: deactivate()
+                Sprinkler --> Water: 
+                deactivate Sprinkler
+                
+                Water -> Water: updateSupply(-amount)
+                
+                Water -> Log: log(INFO, "Zone X watered. New moisture: Z%")
+                activate Log
+                Log --> Water: 
+                deactivate Log
+                
+            else waterSupply low
+                Water -> Log: log(WARNING, "Water supply low - skipping Zone X")
+                activate Log
+                Log --> Water: 
+                deactivate Log
+            end
+            
+        else no plants need water
+            Water -> Log: log(DEBUG, "Zone X has no plants needing water")
+            activate Log
+            Log --> Water: 
+            deactivate Log
+        end
+        
+        else moistureLevel adequate
+            Water -> Log: log(DEBUG, "Zone X moisture adequate: Y%")
+            activate Log
+            Log --> Water: 
+            deactivate Log
+        end
+    end
+else weather == RAINY
+    Water -> Log: log(INFO, "Skipping watering - rain detected")
+    activate Log
+    Log --> Water: 
+    deactivate Log
+    Water -> Water: stopAllSprinklers()
+    note right: Sprinklers stopped\nduring rain
+end
+
+Water --> Engine: 
+deactivate Water
+
+Engine -> Engine: continue simulation
+deactivate Engine
+
+@enduml
+

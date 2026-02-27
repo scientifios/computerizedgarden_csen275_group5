@@ -1,0 +1,32 @@
+{
+  "plants": [
+    {
+      "type": "Strawberry",
+      "position": {
+        "row": 1,
+        "column": 1
+      }
+    },
+    {
+      "type": "Carrot",
+      "position": {
+        "row": 2,
+        "column": 2
+      }
+    },
+    {
+      "type": "Tomato",
+      "position": {
+        "row": 3,
+        "column": 3
+      }
+    },
+    {
+      "type": "Sunflower",
+      "position": {
+        "row": 4,
+        "column": 4
+      }
+    }
+  ]
+}

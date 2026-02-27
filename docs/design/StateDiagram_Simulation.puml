@@ -1,0 +1,86 @@
+@startuml Simulation_StateDiagram
+
+[*] --> Initialized : Application starts
+
+state Initialized {
+    Initialized : Garden created
+    Initialized : Systems ready
+    Initialized : Waiting for user action
+}
+
+state Running {
+    Running : Timeline active
+    Running : Ticks progressing
+    Running : All systems updating
+    
+    state "Normal Speed (1x)" as Speed1x
+    state "Fast Speed (5x)" as Speed5x
+    state "Ultra Speed (10x)" as Speed10x
+    
+    [*] --> Speed1x
+    Speed1x --> Speed5x : User increases speed
+    Speed5x --> Speed10x : User increases speed
+    Speed10x --> Speed5x : User decreases speed
+    Speed5x --> Speed1x : User decreases speed
+}
+
+state Paused {
+    Paused : Timeline stopped
+    Paused : State frozen
+    Paused : UI accessible
+}
+
+state Stopped {
+    Stopped : Simulation ended
+    Stopped : Final statistics calculated
+    Stopped : Logs closed
+}
+
+state Error {
+    Error : Exception occurred
+    Error : Attempting recovery
+    Error : Error logged
+}
+
+Initialized --> Running : User clicks\n"Start Simulation"
+Initialized --> [*] : User closes application
+
+Running --> Paused : User clicks\n"Pause"
+Running --> Stopped : User clicks\n"Stop"
+Running --> Error : Unhandled exception
+
+Paused --> Running : User clicks\n"Resume"
+Paused --> Stopped : User clicks\n"Stop"
+Paused --> Initialized : User clicks\n"Reset"
+
+Stopped --> Initialized : User clicks\n"New Garden"
+Stopped --> [*] : User closes application
+
+Error --> Running : Recovery successful
+Error --> Stopped : Recovery failed
+Error --> [*] : Critical error\n(forced shutdown)
+
+note right of Running
+  - Systems update each tick
+  - Plants grow
+  - Weather changes
+  - Random events occur
+end note
+
+note left of Paused
+  - Examine plant details
+  - View logs
+  - Adjust settings
+  - Plan next actions
+end note
+
+note bottom of Error
+  System attempts to:
+  1. Log error details
+  2. Reset failed component
+  3. Continue if possible
+  4. Notify user
+end note
+
+@enduml
+

@@ -1,0 +1,108 @@
+{
+  "fruits": [
+    {
+      "name": "Strawberry",
+      "waterRequirement": 50,
+      "growthRate": "Medium",
+      "temperatureRequirement": 21,
+      "minTemperature": 12,
+      "maxTemperature": 30,
+      "lifespan": 90,
+      "growthDuration": 8,
+      "vulnerableTo": ["Red Mite", "Green Leaf Worm"]
+    },
+    {
+      "name": "Grapevine",
+      "waterRequirement": 50,
+      "growthRate": "Medium",
+      "temperatureRequirement": 21,
+      "minTemperature": 12,
+      "maxTemperature": 30,
+      "lifespan": 90,
+      "growthDuration": 8,
+      "vulnerableTo": ["Black Beetle", "Red Mite"]
+    },
+    {
+      "name": "Apple Sapling",
+      "waterRequirement": 50,
+      "growthRate": "Medium",
+      "temperatureRequirement": 21,
+      "minTemperature": 12,
+      "maxTemperature": 30,
+      "lifespan": 90,
+      "growthDuration": 8,
+      "vulnerableTo": ["Brown Caterpillar", "Green Leaf Worm"]
+    }
+  ],
+  "vegetables": [
+    {
+      "name": "Carrot",
+      "waterRequirement": 60,
+      "growthRate": "Fast",
+      "temperatureRequirement": 21,
+      "minTemperature": 15,
+      "maxTemperature": 28,
+      "lifespan": 90,
+      "growthDuration": 5,
+      "vulnerableTo": ["Red Mite", "Brown Caterpillar"]
+    },
+    {
+      "name": "Tomato",
+      "waterRequirement": 60,
+      "growthRate": "Fast",
+      "temperatureRequirement": 21,
+      "minTemperature": 15,
+      "maxTemperature": 28,
+      "lifespan": 90,
+      "growthDuration": 5,
+      "vulnerableTo": ["Black Beetle", "Red Mite"]
+    },
+    {
+      "name": "Onion",
+      "waterRequirement": 60,
+      "growthRate": "Fast",
+      "temperatureRequirement": 21,
+      "minTemperature": 15,
+      "maxTemperature": 28,
+      "lifespan": 90,
+      "growthDuration": 5,
+      "vulnerableTo": ["Green Leaf Worm"]
+    }
+  ],
+  "flowers": [
+    {
+      "name": "Sunflower",
+      "waterRequirement": 30,
+      "growthRate": "Medium",
+      "temperatureRequirement": 20,
+      "minTemperature": 10,
+      "maxTemperature": 30,
+      "lifespan": 90,
+      "growthDuration": 7,
+      "vulnerableTo": ["Red Mite", "Brown Caterpillar"]
+    },
+    {
+      "name": "Tulip",
+      "waterRequirement": 30,
+      "growthRate": "Medium",
+      "temperatureRequirement": 20,
+      "minTemperature": 10,
+      "maxTemperature": 30,
+      "lifespan": 90,
+      "growthDuration": 7,
+      "vulnerableTo": ["Green Leaf Worm"]
+    },
+    {
+      "name": "Rose",
+      "waterRequirement": 30,
+      "growthRate": "Medium",
+      "temperatureRequirement": 20,
+      "minTemperature": 10,
+      "maxTemperature": 30,
+      "lifespan": 90,
+      "growthDuration": 7,
+      "vulnerableTo": ["Black Beetle", "Red Mite"]
+    }
+  ]
+}
+

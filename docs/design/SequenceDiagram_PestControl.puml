@@ -1,0 +1,147 @@
+@startuml PestControl_Sequence
+
+participant "SimulationEngine" as Engine
+participant "PestControlSystem" as PestCtrl
+participant "Zone" as Zone
+participant "PestDetector" as Detector
+participant "Plant" as Plant
+participant "Pest" as Pest
+participant "Logger" as Log
+
+Engine -> Engine: tick()
+activate Engine
+note right: Random event check
+
+Engine -> PestCtrl: spawnPests()
+activate PestCtrl
+
+PestCtrl -> PestCtrl: randomCheck()
+note right: Probability-based\nspawn decision
+
+alt pest spawn triggered
+    PestCtrl -> PestCtrl: selectRandomZone()
+    PestCtrl -> PestCtrl: createPest(type, position)
+    
+    create Pest
+    PestCtrl -> Pest: new HarmfulPest()
+    activate Pest
+    
+    PestCtrl -> Log: log(WARNING, "Pest appeared in Zone X")
+    activate Log
+    Log --> PestCtrl: 
+    deactivate Log
+end
+
+PestCtrl --> Engine: 
+deactivate PestCtrl
+
+Engine -> PestCtrl: detectPests(zone)
+activate PestCtrl
+
+loop for each zone
+    PestCtrl -> Detector: readValue()
+    activate Detector
+    Detector -> Detector: scanForPests()
+    Detector --> PestCtrl: pestCount
+    deactivate Detector
+    
+    alt pestCount > 0
+        PestCtrl -> Zone: updateInfestationLevel(pestCount)
+        activate Zone
+        Zone --> PestCtrl: 
+        deactivate Zone
+        
+        PestCtrl -> PestCtrl: assessThreat(zone)
+        note right: Calculate threat level\nbased on pest count
+        
+        alt threat level = HIGH or CRITICAL
+            PestCtrl -> Log: log(WARNING, "High infestation in Zone X")
+            activate Log
+            Log --> PestCtrl: 
+            deactivate Log
+            
+            PestCtrl -> PestCtrl: applyTreatment(zone)
+            
+            alt pesticideStock > 0
+                PestCtrl -> Log: log(INFO, "Applying pesticide to Zone X")
+                activate Log
+                Log --> PestCtrl: 
+                deactivate Log
+                
+                PestCtrl -> Zone: getPlants()
+                activate Zone
+                Zone --> PestCtrl: plantList
+                deactivate Zone
+                
+                loop for each plant in zone
+                    PestCtrl -> Plant: reducePestAttacks(amount)
+                    activate Plant
+                    Plant -> Plant: updateHealth()
+                    Plant --> PestCtrl: 
+                    deactivate Plant
+                end
+                
+                PestCtrl -> PestCtrl: reducePestCount(zone, 50%)
+                
+                loop for pests in zone
+                    PestCtrl -> Pest: remove()
+                    destroy Pest
+                    note right: All pests removed\n(harmful only)
+                end
+                
+                PestCtrl -> PestCtrl: updateStock(-1)
+                
+                PestCtrl -> Log: log(INFO, "Treatment complete - pests reduced")
+                activate Log
+                Log --> PestCtrl: 
+                deactivate Log
+                
+            else pesticideStock = 0
+                PestCtrl -> Log: log(ERROR, "Cannot treat - no pesticide stock")
+                activate Log
+                Log --> PestCtrl: 
+                deactivate Log
+                
+                note over PestCtrl: Pests continue damaging plants
+            end
+            
+        else threat level = LOW or MEDIUM
+            PestCtrl -> Log: log(INFO, "Zone X - monitoring pest levels")
+            activate Log
+            Log --> PestCtrl: 
+            deactivate Log
+        end
+    end
+end
+
+PestCtrl --> Engine: 
+deactivate PestCtrl
+
+' Apply ongoing damage
+Engine -> PestCtrl: applyPestDamage()
+activate PestCtrl
+
+loop for each pest
+    PestCtrl -> Pest: causeDamage(plant)
+    Pest -> Plant: takeDamage(damageAmount)
+    activate Plant
+    Plant -> Plant: decrementHealth()
+    
+    alt health <= 0
+        Plant -> Plant: die()
+        Plant -> Log: log(WARNING, "Plant died from pest damage")
+        activate Log
+        Log --> Plant: 
+        deactivate Log
+    end
+    
+    Plant --> Pest: 
+    deactivate Plant
+end
+
+PestCtrl --> Engine: 
+deactivate PestCtrl
+deactivate Engine
+
+@enduml
+

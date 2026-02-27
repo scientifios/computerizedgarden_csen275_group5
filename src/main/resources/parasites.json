@@ -1,0 +1,25 @@
+{
+  "parasites": [
+    {
+      "name": "Red Mite",
+      "damage": 2,
+      "targetPlants": ["Strawberry", "Grapevine", "Carrot", "Tomato", "Sunflower", "Rose"]
+    },
+    {
+      "name": "Green Leaf Worm",
+      "damage": 3,
+      "targetPlants": ["Strawberry", "Apple Sapling", "Onion", "Tulip"]
+    },
+    {
+      "name": "Black Beetle",
+      "damage": 4,
+      "targetPlants": ["Grapevine", "Tomato", "Rose"]
+    },
+    {
+      "name": "Brown Caterpillar",
+      "damage": 2,
+      "targetPlants": ["Apple Sapling", "Carrot", "Sunflower"]
+    }
+  ]
+}
+
