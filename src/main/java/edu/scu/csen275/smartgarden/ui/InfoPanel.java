@@ -11,7 +11,7 @@ import javafx.scene.layout.VBox;
 public class InfoPanel extends VBox {
     private final InfoCard simulationCard;
     private final InfoCard resourcesCard;
-    
+
     private final Label timeLabel;
     private final Label statsLabel;
     private final Label heatingStatusLabel;
@@ -19,43 +19,41 @@ public class InfoPanel extends VBox {
     private final WeatherDisplay weatherDisplay;
     private final ProgressBar waterBar;
     private final ProgressBar pesticideBar;
-    
+
     public InfoPanel() {
         this.setSpacing(25);
         this.setPadding(new Insets(20));
         this.setMinWidth(320);
         this.getStyleClass().add("info-panel");
-        
+
         // Simulation Info Card
-        simulationCard = new InfoCard("📊 Simulation Info");
+        simulationCard = new InfoCard("Simulation Info");
         timeLabel = simulationCard.addLabel("Time: --", false);
         statsLabel = simulationCard.addLabel("Plants: 0", false);
-        heatingStatusLabel = simulationCard.addLabel("🔥 Heating: Off", false);
-        temperatureLabel = simulationCard.addLabel("🌡️ Current: 20°C", false);
+        heatingStatusLabel = simulationCard.addLabel("Heating: Off", false);
+        temperatureLabel = simulationCard.addLabel("Current: 20C", false);
         weatherDisplay = new WeatherDisplay();
         simulationCard.getChildren().add(weatherDisplay);
-        
+
         // Resources Card
-        resourcesCard = new InfoCard("💧 Resources");
+        resourcesCard = new InfoCard("Resources");
+        resourcesCard.setTitleColor("#1E88E5");
         waterBar = resourcesCard.addProgressBar("Water Supply", 1.0);
         pesticideBar = resourcesCard.addProgressBar("Pesticide Stock", 1.0);
-        
+
         // Add all cards
         this.getChildren().addAll(simulationCard, resourcesCard);
     }
-    
+
     /**
      * Updates progress bars with animation.
      */
     public void updateProgressBars(double waterProgress, double pesticideProgress) {
         animateProgressBar(waterBar, waterProgress);
         animateProgressBar(pesticideBar, pesticideProgress);
-        
-        // Update styles based on values
-        InfoCard.updateProgressBarStyle(waterBar, waterProgress);
-        InfoCard.updateProgressBarStyle(pesticideBar, pesticideProgress);
+        // Keep resource bars consistently blue (no low/critical recolor).
     }
-    
+
     /**
      * Animates progress bar to new value smoothly.
      */
@@ -68,7 +66,7 @@ public class InfoPanel extends VBox {
         );
         timeline.play();
     }
-    
+
     // Getters
     public Label getTimeLabel() { return timeLabel; }
     public Label getStatsLabel() { return statsLabel; }
@@ -78,4 +76,3 @@ public class InfoPanel extends VBox {
     public ProgressBar getWaterBar() { return waterBar; }
     public ProgressBar getPesticideBar() { return pesticideBar; }
 }
-

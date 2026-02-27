@@ -4,9 +4,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 
 /**
  * Modern toolbar with icons and animations.
@@ -34,16 +31,15 @@ public class ModernToolbar extends HBox {
         sep1.setPrefHeight(30);
         
         // Control buttons
-        startBtn = createIconButton("▶️ Start", "button-start");
-        pauseBtn = createIconButton("⏸ Pause", "button-pause");
-        stopBtn = createIconButton("⏹ Stop", "button-stop");
+        startBtn = createIconButton("Start", "button-start");
+        pauseBtn = createIconButton("Pause", "button-pause");
+        stopBtn = createIconButton("Stop", "button-stop");
         
         pauseBtn.setDisable(true);
         
         // Speed selector
         Label speedLabel = new Label("Speed:");
-        speedLabel.setTextFill(Color.WHITE);
-        speedLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        speedLabel.getStyleClass().add("toolbar-label");
         
         speedBox = new ComboBox<>();
         speedBox.getItems().addAll("1x", "2x", "5x", "10x");

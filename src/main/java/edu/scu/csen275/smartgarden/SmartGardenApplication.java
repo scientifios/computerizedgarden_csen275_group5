@@ -73,7 +73,7 @@ public class SmartGardenApplication extends Application {
             );
             
             // Setup stage
-            primaryStage.setTitle("🌿 Smart Garden Simulation - CSEN 275");
+            primaryStage.setTitle("Smart Garden Simulation - CSEN 275");
             primaryStage.setScene(scene);
             primaryStage.setMinWidth(900);
             primaryStage.setMinHeight(600);
@@ -128,14 +128,12 @@ public class SmartGardenApplication extends Application {
             
             primaryStage.show();
             
-            // Add decorative elements after scene is shown
+            // Bind decorative pane size after scene is shown
             Platform.runLater(() -> {
-                // Bind decorative pane to scene size
                 Scene currentScene = primaryStage.getScene();
                 if (currentScene != null && decorativePane != null) {
                     decorativePane.prefWidthProperty().bind(currentScene.widthProperty());
                     decorativePane.prefHeightProperty().bind(currentScene.heightProperty().subtract(200));
-                    addDecorativeElements();
                 }
             });
             
@@ -193,7 +191,7 @@ public class SmartGardenApplication extends Application {
         root.setStyle("-fx-background-color: transparent;");
         
         // Make toolbar semi-transparent so clouds show through
-        toolbar.setStyle("-fx-background-color: rgba(46, 125, 50, 0.85);");
+        toolbar.setStyle("-fx-background-color: rgba(0, 0, 0, 0.9);");
         
         // Layout UI on top
         root.setTop(toolbar);
@@ -251,10 +249,10 @@ public class SmartGardenApplication extends Application {
         toolbar.getPauseButton().setOnAction(e -> {
             if (toolbar.getPauseButton().getText().contains("Pause")) {
                 controller.pauseSimulation();
-                toolbar.getPauseButton().setText("▶️ Resume");
+                toolbar.getPauseButton().setText("Resume");
             } else {
                 controller.resumeSimulation();
-                toolbar.getPauseButton().setText("⏸ Pause");
+                toolbar.getPauseButton().setText("Pause");
             }
         });
         
@@ -262,7 +260,7 @@ public class SmartGardenApplication extends Application {
             controller.stopSimulation();
             toolbar.getStartButton().setDisable(false);
             toolbar.getPauseButton().setDisable(true);
-            toolbar.getPauseButton().setText("⏸ Pause");
+            toolbar.getPauseButton().setText("Pause");
         });
         
         toolbar.getSpeedBox().setOnAction(e -> {
@@ -302,33 +300,6 @@ public class SmartGardenApplication extends Application {
         
         logPanel.getChildren().addAll(logTitle, logListView);
         return logPanel;
-    }
-    
-    /**
-     * Adds decorative animated elements.
-     */
-    private void addDecorativeElements() {
-        // Add 3-5 colorful butterflies with sinusoidal flight
-        int butterflyCount = 3 + (int)(Math.random() * 3); // 3-5 butterflies
-        DecorativeElements.createButterflies(decorativePane, butterflyCount);
-        
-        // Add 2-3 bees with fast buzzing movement
-        int beeCount = 2 + (int)(Math.random() * 2); // 2-3 bees
-        DecorativeElements.createBees(decorativePane, beeCount);
-        
-        // Add 1-2 birds flying across
-        int birdCount = 1 + (int)(Math.random() * 2); // 1-2 birds
-        DecorativeElements.createBirds(decorativePane, birdCount);
-        
-        // Periodically add floating leaves
-        javafx.animation.Timeline leafTimeline = new javafx.animation.Timeline(
-            new javafx.animation.KeyFrame(
-                javafx.util.Duration.seconds(5),
-                e -> DecorativeElements.createLeaf(decorativePane)
-            )
-        );
-        leafTimeline.setCycleCount(javafx.animation.Timeline.INDEFINITE);
-        leafTimeline.play();
     }
     
     /**
@@ -373,32 +344,6 @@ public class SmartGardenApplication extends Application {
     }
     
     /**
-     * Helper method to find the center container for animations.
-     */
-    private Pane findCenterContainer() {
-        if (scene == null) return null;
-        
-        javafx.scene.Node root = scene.getRoot();
-        if (root instanceof BorderPane) {
-            BorderPane borderPane = (BorderPane) root;
-            javafx.scene.Node center = borderPane.getCenter();
-            if (center instanceof Pane) {
-                return (Pane) center;
-            }
-            // Sometimes center is a StackPane containing the actual container
-            if (center instanceof StackPane) {
-                StackPane stackPane = (StackPane) center;
-                for (javafx.scene.Node child : stackPane.getChildren()) {
-                    if (child instanceof Pane) {
-                        return (Pane) child;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-    
-    /**
      * Starts the UI update timer.
      */
     private void startUIUpdateTimer() {
@@ -438,11 +383,9 @@ public class SmartGardenApplication extends Application {
             toolbar.updateStatus(state);
             
             // Update simulation info
-            infoPanel.getTimeLabel().setText(
-                "⏰ Day " + engine.getDayCounter() + " | " + engine.getFormattedTime()
-            );
+            infoPanel.getTimeLabel().setText("Day " + engine.getDayCounter() + " | " + engine.getFormattedTime());
             infoPanel.getStatsLabel().setText(
-                String.format("🌱 Plants: %d alive / %d total",
+                String.format("Plants: %d alive / %d total",
                     garden.getLivingPlants().size(), garden.getTotalPlants())
             );
             
@@ -455,95 +398,29 @@ public class SmartGardenApplication extends Application {
                 engine.getHeatingSystem().getHeatingMode();
             String heatingText;
             if (heatingMode == edu.scu.csen275.smartgarden.system.HeatingSystem.HeatingMode.OFF) {
-                heatingText = "🔥 Heating: Off";
+                heatingText = "Heating: Off";
             } else {
-                heatingText = "🔥 Heating: " + heatingMode.name() + " (" + 
+                heatingText = "Heating: " + heatingMode.name() + " (" + 
                               engine.getHeatingSystem().getCurrentTemperature() + "°C)";
             }
             infoPanel.getHeatingStatusLabel().setText(heatingText);
             
             // Update temperature label
             int currentTemp = engine.getHeatingSystem().getCurrentTemperature();
-            infoPanel.getTemperatureLabel().setText("🌡️ Current: " + currentTemp + "°C");
+            infoPanel.getTemperatureLabel().setText("Current: " + currentTemp + "C");
             
             // Update background brightness based on weather
             if (animatedBackground != null) {
                 animatedBackground.setWeather(weather == WeatherSystem.Weather.SUNNY);
             }
             
-            // Show/hide rain animation based on weather changes
+            // Keep weather system logic, without weather visual animations.
             if (previousWeather != weather) {
-                // Get center container - root is StackPane containing ScrollPane/BorderPane
-                Pane centerContainer = null;
-                if (scene != null && scene.getRoot() != null) {
-                    if (scene.getRoot() instanceof StackPane) {
-                        StackPane rootStack = (StackPane) scene.getRoot();
-                        // Find BorderPane directly or inside ScrollPane
-                        for (javafx.scene.Node child : rootStack.getChildren()) {
-                            if (child instanceof BorderPane) {
-                                BorderPane borderPane = (BorderPane) child;
-                                javafx.scene.Node center = borderPane.getCenter();
-                                if (center instanceof Pane) {
-                                    centerContainer = (Pane) center;
-                                    break;
-                                }
-                            } else if (child instanceof ScrollPane) {
-                                javafx.scene.Node content = ((ScrollPane) child).getContent();
-                                if (content instanceof BorderPane) {
-                                    BorderPane borderPane = (BorderPane) content;
-                                    javafx.scene.Node center = borderPane.getCenter();
-                                    if (center instanceof Pane) {
-                                        centerContainer = (Pane) center;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    } else if (scene.getRoot() instanceof BorderPane) {
-                        BorderPane borderPane = (BorderPane) scene.getRoot();
-                        javafx.scene.Node center = borderPane.getCenter();
-                        if (center instanceof Pane) {
-                            centerContainer = (Pane) center;
-                        }
+                if (weather == WeatherSystem.Weather.RAINY || weather == WeatherSystem.Weather.SNOWY) {
+                    if (engine != null && engine.getWateringSystem() != null) {
+                        engine.getWateringSystem().stopAllSprinklers();
                     }
-                }
-                
-                if (centerContainer != null) {
-                    // Handle RAINY weather
-                    if (weather == WeatherSystem.Weather.RAINY) {
-                        System.out.println("[SmartGardenApplication] Weather changed to RAINY - starting rain animation");
-                        RainAnimationEngine.startRain(centerContainer);
-                        // Stop snow if it was snowing
-                        SnowAnimationEngine.stopSnow(centerContainer);
-                        // Stop all sprinklers when rain starts
-                        if (engine != null && engine.getWateringSystem() != null) {
-                            engine.getWateringSystem().stopAllSprinklers();
-                        }
-                        // Stop all sprinkler animations when rain starts
-                        edu.scu.csen275.smartgarden.ui.SprinklerAnimationEngine.stopAllAnimations();
-                    } else if (previousWeather == WeatherSystem.Weather.RAINY) {
-                        System.out.println("[SmartGardenApplication] Weather changed from RAINY to " + weather + " - stopping rain animation");
-                        RainAnimationEngine.stopRain(centerContainer);
-                    }
-                    
-                    // Handle SNOWY weather
-                    if (weather == WeatherSystem.Weather.SNOWY) {
-                        System.out.println("[SmartGardenApplication] Weather changed to SNOWY - starting snow animation");
-                        SnowAnimationEngine.startSnow(centerContainer);
-                        // Stop rain if it was raining
-                        RainAnimationEngine.stopRain(centerContainer);
-                        // Stop all sprinklers when snowing
-                        if (engine != null && engine.getWateringSystem() != null) {
-                            engine.getWateringSystem().stopAllSprinklers();
-                        }
-                        // Stop all sprinkler animations when snowing
-                        edu.scu.csen275.smartgarden.ui.SprinklerAnimationEngine.stopAllAnimations();
-                    } else if (previousWeather == WeatherSystem.Weather.SNOWY) {
-                        System.out.println("[SmartGardenApplication] Weather changed from SNOWY to " + weather + " - stopping snow animation");
-                        SnowAnimationEngine.stopSnow(centerContainer);
-                    }
-                } else {
-                    System.err.println("[SmartGardenApplication] WARNING: Could not find center container for weather animation");
+                    edu.scu.csen275.smartgarden.ui.SprinklerAnimationEngine.stopAllAnimations();
                 }
                 previousWeather = weather;
             }
@@ -845,3 +722,4 @@ public class SmartGardenApplication extends Application {
         launch(args);
     }
 }
+

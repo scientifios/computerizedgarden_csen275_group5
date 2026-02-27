@@ -114,7 +114,6 @@ public class GardenGridPanel extends VBox {
         this.setAlignment(Pos.CENTER);
         this.getStyleClass().add("garden-panel");
         // Make panel background transparent so animated background shows through
-        this.setStyle("-fx-background-color: transparent;");
     }
     
     /**
@@ -125,8 +124,8 @@ public class GardenGridPanel extends VBox {
         selectorBox.setAlignment(Pos.CENTER);
         selectorBox.getStyleClass().add("plant-selector");
         
-        Label selectLabel = new Label("🌱 Select Plant:");
-        selectLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;");
+        Label selectLabel = new Label("Select Plant:");
+        selectLabel.getStyleClass().add("plant-selector-label");
         
         plantSelector = new ComboBox<>();
         plantSelector.setEditable(false); // Make sure it's not editable
@@ -199,12 +198,12 @@ public class GardenGridPanel extends VBox {
                     
                     // For dropdown items, just show the plant name (emoji shows as black anyway)
                     Label nameLabel = new Label(item.getDisplayName());
-                    nameLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: black;");
+                    nameLabel.getStyleClass().add("plant-name-label");
                     
                     cellContent.getChildren().add(nameLabel);
                     setGraphic(cellContent);
                     setText(null);
-                    setStyle("-fx-padding: 8px;");
+                    if (!getStyleClass().contains("plant-selector-cell")) getStyleClass().add("plant-selector-cell");
                 }
             }
         });
@@ -251,19 +250,19 @@ public class GardenGridPanel extends VBox {
                     // Actually, let's try wrapping in a StackPane to isolate from cell styling
                     StackPane emojiWrapper = new StackPane(emojiText);
                     emojiWrapper.setAlignment(Pos.CENTER);
-                    emojiWrapper.setStyle("-fx-background-color: transparent;");
+                    emojiWrapper.getStyleClass().add("transparent-bg");
                     // Don't set fill on Text - let emoji render in natural color
                     
                     // Label for plant name
                     Label nameLabel = new Label(item.getDisplayName());
-                    nameLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: black;");
+                    nameLabel.getStyleClass().add("plant-name-label");
                     
                     buttonContent.getChildren().addAll(emojiWrapper, nameLabel);
                     setGraphic(buttonContent);
                     setText(null); // Clear text, use graphic instead
                     // CRITICAL: Don't set any text-fill on the cell - it would override emoji colors
                     // Also ensure the cell doesn't apply any default styling to children
-                    setStyle("-fx-text-fill: transparent;");
+                    if (!getStyleClass().contains("combo-cell-transparent-text")) getStyleClass().add("combo-cell-transparent-text");
                     // The transparent text-fill on the cell won't affect the graphic's Text node
                 }
             }
@@ -271,20 +270,12 @@ public class GardenGridPanel extends VBox {
         
         // Ensure dropdown is visible and can open
         plantSelector.setVisibleRowCount(10); // Show more items
-        
-        // Style the combo box (pure JavaFX, no CSS)
-        plantSelector.setStyle(
-            "-fx-background-color: white;" +
-            "-fx-background-radius: 8;" +
-            "-fx-border-color: #4CAF50;" +
-            "-fx-border-radius: 8;" +
-            "-fx-border-width: 2;" +
-            "-fx-font-size: 14px;" +
-            "-fx-padding: 5 10;"
-        );
+
+        // Style via CSS classes.
+        plantSelector.getStyleClass().add("modern-combo");
         plantSelector.setPrefWidth(200);
         
-        javafx.scene.control.Button clearBtn = new javafx.scene.control.Button("🗑 Clear All");
+        javafx.scene.control.Button clearBtn = new javafx.scene.control.Button("Clear All");
         clearBtn.getStyleClass().add("modern-button");
         clearBtn.setOnAction(e -> clearGarden());
         
@@ -442,7 +433,6 @@ public class GardenGridPanel extends VBox {
         );
         
         Tooltip tooltip = new Tooltip(tooltipText);
-        tooltip.setStyle("-fx-font-size: 12px;");
         Tooltip.install(tile, tooltip);
     }
     
@@ -516,25 +506,9 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Animates watering effect on a zone.
-     * Only shows animation if it's not raining.
+     * Refreshes tile state after watering in a zone.
      */
     public void animateWatering(int zoneId) {
-        // Check weather - don't show sprinkler animation if it's raining
-        try {
-            if (controller != null && controller.getSimulationEngine() != null) {
-                edu.scu.csen275.smartgarden.simulation.WeatherSystem.Weather currentWeather = 
-                    controller.getSimulationEngine().getWeatherSystem().getCurrentWeather();
-                if (currentWeather == edu.scu.csen275.smartgarden.simulation.WeatherSystem.Weather.RAINY) {
-                    // It's raining - don't show sprinkler animation
-                    return;
-                }
-            }
-        } catch (Exception e) {
-            // If we can't check weather, proceed (shouldn't happen, but be safe)
-        }
-        
-        // Calculate zone boundaries (3x3 grid of zones)
         int zoneRow = (zoneId - 1) / 3;
         int zoneCol = (zoneId - 1) % 3;
         int tilesPerZone = 3;
@@ -544,87 +518,31 @@ public class GardenGridPanel extends VBox {
         int startCol = zoneCol * tilesPerZone;
         int endCol = startCol + tilesPerZone;
         
-        List<AnimatedTile> zoneTiles = new java.util.ArrayList<>();
         for (int row = startRow; row < endRow && row < GRID_SIZE; row++) {
             for (int col = startCol; col < endCol && col < GRID_SIZE; col++) {
-                if (tiles[row][col] != null) {
-                    zoneTiles.add(tiles[row][col]);
+                Position position = new Position(row, col);
+                Plant plant = controller.getGarden().getPlant(position);
+                if (tiles[row][col] != null && plant != null) {
+                    tiles[row][col].showTemporaryWaterHint();
+                    tiles[row][col].update(plant);
                 }
             }
-        }
-        
-        // Use animation container if set, otherwise try to find parent Pane
-        Pane container = animationContainer;
-        if (container == null) {
-            javafx.scene.Node parent = getParent();
-            while (parent != null && !(parent instanceof Pane)) {
-                parent = parent.getParent();
-            }
-            if (parent instanceof Pane) {
-                container = (Pane) parent;
-            }
-        }
-        
-        if (container != null) {
-            // Show sprinkler animation (only if not raining - checked by caller)
-            SprinklerAnimationEngine.animateSprinkler(zoneId, zoneTiles, container);
-            // Also show water droplets/ripples
-            WaterAnimationEngine.animateZoneWatering(zoneTiles, container);
         }
     }
     
     /**
-     * Animates watering effect on all tiles with full visual effects.
-     * Only shows animation if it's not raining.
+     * Refreshes tile state after global watering.
      */
     public void animateAllTilesWatering() {
-        // Check weather - don't show sprinkler animation if it's raining
-        try {
-            if (controller != null && controller.getSimulationEngine() != null) {
-                edu.scu.csen275.smartgarden.simulation.WeatherSystem.Weather currentWeather = 
-                    controller.getSimulationEngine().getWeatherSystem().getCurrentWeather();
-                if (currentWeather == edu.scu.csen275.smartgarden.simulation.WeatherSystem.Weather.RAINY) {
-                    // It's raining - don't show sprinkler animation
-                    return;
-                }
-            }
-        } catch (Exception e) {
-            // If we can't check weather, proceed (shouldn't happen, but be safe)
-        }
-        
-        List<AnimatedTile> allTiles = new java.util.ArrayList<>();
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
-                if (tiles[row][col] != null) {
-                    allTiles.add(tiles[row][col]);
+                Position position = new Position(row, col);
+                Plant plant = controller.getGarden().getPlant(position);
+                if (tiles[row][col] != null && plant != null) {
+                    tiles[row][col].showTemporaryWaterHint();
+                    tiles[row][col].update(plant);
                 }
             }
-        }
-        
-        // Find parent Pane container for animation overlay
-        Pane container = null;
-        javafx.scene.Node parent = this.getParent();
-        
-        // Traverse up to find a suitable container
-        while (parent != null) {
-            if (parent instanceof Pane) {
-                container = (Pane) parent;
-                break;
-            }
-            parent = parent.getParent();
-        }
-        
-        // If we found a container, start the animation
-        if (container != null && !allTiles.isEmpty()) {
-            // Start watering animation on all tiles (soil darkening)
-            for (AnimatedTile tile : allTiles) {
-                tile.startWateringAnimation();
-            }
-            
-            // Show sprinkler animation for all zones
-            SprinklerAnimationEngine.animateSprinkler(0, allTiles, container);
-            // Also show water droplets/ripples
-            WaterAnimationEngine.animateAllTilesWatering(allTiles, container);
         }
     }
     
@@ -748,5 +666,3 @@ public class GardenGridPanel extends VBox {
         return null;
     }
 }
-
-
