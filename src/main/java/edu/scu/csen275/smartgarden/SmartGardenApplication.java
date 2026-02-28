@@ -196,10 +196,15 @@ public class SmartGardenApplication extends Application {
         toolbar.setStyle("-fx-background-color: rgba(46, 125, 50, 0.85);");
         
         // Layout UI on top
-        root.setTop(toolbar);
+        // root.setTop(toolbar);
+        // root.setCenter(centerContainer);
+        // root.setRight(infoPanel);
+        // root.setBottom(logPanel);
+        root.setBottom(toolbar);
         root.setCenter(centerContainer);
-        root.setRight(infoPanel);
-        root.setBottom(logPanel);
+        root.setTop(logPanel);
+        root.setLeft(infoPanel);
+
 
         ScrollPane mainScrollPane = new ScrollPane(root);
         mainScrollPane.setFitToWidth(true);
