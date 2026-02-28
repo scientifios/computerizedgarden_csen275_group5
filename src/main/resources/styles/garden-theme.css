@@ -25,19 +25,27 @@
     -fx-font-size: 16px;
     -fx-font-weight: bold;
     -fx-text-fill: white;
+    -fx-background-color: rgba(0, 0, 0, 0.28);
+    -fx-background-radius: 12;
+    -fx-padding: 4 10;
 }
 
 .status-running {
-    -fx-text-fill: #64B5F6;
-    -fx-effect: dropshadow(gaussian, #64B5F6, 10, 0.8, 0, 0);
+    -fx-text-fill: #E8F5E9;
+    -fx-background-color: rgba(46, 125, 50, 0.45);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 3, 0.2, 0, 1);
 }
 
 .status-stopped {
-    -fx-text-fill: #E57373;
+    -fx-text-fill: #FFEBEE;
+    -fx-background-color: rgba(198, 40, 40, 0.45);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 3, 0.2, 0, 1);
 }
 
 .status-paused {
-    -fx-text-fill: #FFD54F;
+    -fx-text-fill: #FFF8E1;
+    -fx-background-color: rgba(245, 124, 0, 0.45);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 3, 0.2, 0, 1);
 }
 
 /* Modern Buttons */
