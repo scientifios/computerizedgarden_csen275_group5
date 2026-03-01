@@ -38,7 +38,7 @@ public class GardenscapesTopBar extends HBox {
         );
         
         // Title/Logo
-        Label title = new Label("🌿 Smart Garden");
+        Label title = new Label("Smart Garden");
         title.setFont(Font.font("Comic Sans MS", FontWeight.BOLD, 24));
         title.setTextFill(Color.rgb(46, 125, 50));
         title.setEffect(new DropShadow(3, Color.rgb(0, 0, 0, 0.2)));

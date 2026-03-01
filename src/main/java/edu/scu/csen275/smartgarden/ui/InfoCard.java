@@ -22,6 +22,13 @@ public class InfoCard extends VBox {
         titleLabel.getStyleClass().add("card-title");
         this.getChildren().add(titleLabel);
     }
+
+    /**
+     * Sets title color for this card.
+     */
+    public void setTitleColor(String colorHex) {
+        titleLabel.setStyle("-fx-text-fill: " + colorHex + ";");
+    }
     
     /**
      * Adds a labeled progress bar to the card.
@@ -29,6 +36,7 @@ public class InfoCard extends VBox {
     public ProgressBar addProgressBar(String label, double initialValue) {
         Label barLabel = new Label(label);
         barLabel.getStyleClass().add("info-label");
+        barLabel.getStyleClass().add("resource-label");
         
         ProgressBar progressBar = new ProgressBar(initialValue);
         progressBar.getStyleClass().add("modern-progress-bar");
@@ -66,4 +74,3 @@ public class InfoCard extends VBox {
         }
     }
 }
-
