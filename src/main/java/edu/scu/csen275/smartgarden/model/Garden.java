@@ -9,8 +9,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Represents the entire garden with its grid layout and zones.
- * Central domain model that coordinates all plants and zones.
+ * Central domain model representing the garden as a bounded grid with zones.
+ *
+ * The Garden acts as the primary coordinator for plant placement and retrieval.
+ * Plants are indexed by {@link Position} and partitioned into a fixed 3x3 set
+ * of {@link Zone}s for localized operations.
+ *
+ * This class also exposes JavaFX properties (e.g., weather and plant counts)
+ * to support UI data binding, and provides basic statistics for monitoring
+ * simulation state.
  */
 public class Garden {
     private final int rows;
@@ -50,8 +57,9 @@ public class Garden {
     }
     
     /**
-     * Initializes zones for the garden (3x3 grid of zones).
-     */
+    * Partitions the garden grid into a fixed 3x3 set of zones.
+    * The last zone in each row/column absorbs any remainder cells.
+    */
     private void initializeZones() {
         int zoneRows = rows / 3;
         int zoneCols = columns / 3;
@@ -77,9 +85,6 @@ public class Garden {
         }
     }
     
-    /**
-     * Adds a plant to the garden.
-     */
     public boolean addPlant(Plant plant) {
         Position pos = plant.getPosition();
         
@@ -97,7 +102,6 @@ public class Garden {
         totalPlants.set(totalPlants.get() + 1);
         livingPlants.set(livingPlants.get() + 1);
         
-        // Add to appropriate zone
         for (Zone zone : zones) {
             if (zone.containsPosition(pos)) {
                 zone.addPlant(plant);
@@ -105,17 +109,11 @@ public class Garden {
             }
         }
         
-        // Plant already starts with waterLevel = waterRequirement in constructor
-        // No need for additional watering here
-        
         logger.info("Garden", "Planted " + plant.getPlantType() + " at " + pos + 
                    " with initial water: " + plant.getWaterRequirement());
         return true;
     }
     
-    /**
-     * Removes a plant from the garden.
-     */
     public boolean removePlant(Position position) {
         Plant plant = plantMap.remove(position);
         
@@ -125,7 +123,6 @@ public class Garden {
                 livingPlants.set(livingPlants.get() - 1);
             }
             
-            // Remove from zone
             for (Zone zone : zones) {
                 if (zone.containsPosition(position)) {
                     zone.removePlant(plant);
@@ -140,32 +137,20 @@ public class Garden {
         return false;
     }
     
-    /**
-     * Gets the plant at a specific position.
-     */
     public Plant getPlant(Position position) {
         return plantMap.get(position);
     }
-    
-    /**
-     * Gets all plants in the garden.
-     */
+
     public List<Plant> getAllPlants() {
         return new ArrayList<>(plantMap.values());
     }
-    
-    /**
-     * Gets all living plants.
-     */
+
     public List<Plant> getLivingPlants() {
         return plantMap.values().stream()
             .filter(p -> !p.isDead())
             .toList();
     }
     
-    /**
-     * Gets all dead plants.
-     */
     public List<Plant> getDeadPlants() {
         return plantMap.values().stream()
             .filter(Plant::isDead)
@@ -173,31 +158,25 @@ public class Garden {
     }
     
     /**
-     * Updates living plant count.
-     */
+    * Recomputes the number of living plants and synchronizes the JavaFX property.
+    */
     public void updateLivingCount() {
         long count = plantMap.values().stream().filter(p -> !p.isDead()).count();
         livingPlants.set((int) count);
     }
     
-    /**
-     * Checks if a position is valid within the garden bounds.
-     */
     public boolean isValidPosition(Position position) {
         return position.row() >= 0 && position.row() < rows &&
                position.column() >= 0 && position.column() < columns;
     }
     
-    /**
-     * Checks if a position is occupied by a plant.
-     */
     public boolean isPositionOccupied(Position position) {
         return plantMap.containsKey(position);
     }
     
     /**
-     * Gets the zone containing a specific position.
-     */
+    * Returns the zone that contains the given position, or {@code null} if none matches.
+    */
     public Zone getZoneForPosition(Position position) {
         for (Zone zone : zones) {
             if (zone.containsPosition(position)) {
@@ -208,8 +187,8 @@ public class Garden {
     }
     
     /**
-     * Gets zone by ID.
-     */
+    * Returns the zone with the specified id, or {@code null} if not found.
+    */
     public Zone getZone(int zoneId) {
         return zones.stream()
             .filter(z -> z.getZoneId() == zoneId)
@@ -217,16 +196,17 @@ public class Garden {
             .orElse(null);
     }
     
-    /**
-     * Sets the current weather.
-     */
     public void setWeather(String weather) {
         currentWeather.set(weather);
     }
     
     /**
-     * Gets garden statistics.
-     */
+    * Computes a snapshot of garden statistics.
+    *
+    * The returned map includes: totalPlants, livingPlants, deadPlants, zones,
+    * plus per-plant-type counts keyed by the concrete class simple name
+    * (e.g., "Flower", "Fruit").
+    */
     public Map<String, Integer> getStatistics() {
         Map<String, Integer> stats = new HashMap<>();
         stats.put("totalPlants", totalPlants.get());
@@ -234,7 +214,6 @@ public class Garden {
         stats.put("deadPlants", totalPlants.get() - livingPlants.get());
         stats.put("zones", zones.size());
         
-        // Plant type counts
         Map<String, Integer> typeCounts = new HashMap<>();
         for (Plant plant : plantMap.values()) {
             String type = plant.getClass().getSimpleName();
@@ -245,13 +224,11 @@ public class Garden {
         return stats;
     }
     
-    // Getters
     public int getRows() { return rows; }
     public int getColumns() { return columns; }
     public List<Zone> getZones() { return new ArrayList<>(zones); }
     public LocalDateTime getCreationTime() { return creationTime; }
     
-    // Property getters
     public ObjectProperty<String> currentWeatherProperty() { return currentWeather; }
     public IntegerProperty totalPlantsProperty() { return totalPlants; }
     public IntegerProperty livingPlantsProperty() { return livingPlants; }

@@ -4,11 +4,18 @@ import javafx.beans.property.*;
 import edu.scu.csen275.smartgarden.util.Logger;
 
 /**
- * Abstract base class for all plants in the garden.
- * Provides common plant behavior and properties.
+ * Abstract base class for all plants in the garden simulation.
+ *
+ * A Plant maintains observable state (JavaFX properties) for UI binding and
+ * implements common lifecycle logic such as water consumption, health updates,
+ * growth-stage progression, and death conditions.
+ *
+ * Subclasses specialize behavior by providing a growth duration via
+ * {@link #getGrowthDuration()} and configuring environmental parameters
+ * (e.g., water requirement, temperature range, pest resistance).
  */
 public abstract class Plant {
-    // Observable properties for UI binding
+
     private final ObjectProperty<Position> position;
     private final ObjectProperty<GrowthStage> growthStage;
     private final IntegerProperty healthLevel;
@@ -16,15 +23,13 @@ public abstract class Plant {
     private final IntegerProperty daysAlive;
     private final BooleanProperty isDead;
     
-    // Configuration properties
     private final int maxLifespan;
     private final int waterRequirement;
     private final int sunlightRequirement;
     private final int minTemperature;
     private final int maxTemperature;
     private final int pestResistance;
-    
-    // State tracking
+
     private int daysSinceGrowth;
     private int pestAttacks; // Current attack count (can be reduced by treatment)
     private int totalPestAttacks; // Lifetime total (never decreases)
@@ -42,7 +47,7 @@ public abstract class Plant {
         this.position = new SimpleObjectProperty<>(position);
         this.growthStage = new SimpleObjectProperty<>(GrowthStage.SEED);
         this.healthLevel = new SimpleIntegerProperty(100);
-        this.waterLevel = new SimpleIntegerProperty(waterRequirement); // Start with full water requirement
+        this.waterLevel = new SimpleIntegerProperty(waterRequirement);
         this.daysAlive = new SimpleIntegerProperty(0);
         this.isDead = new SimpleBooleanProperty(false);
         
@@ -58,13 +63,13 @@ public abstract class Plant {
         this.totalPestAttacks = 0;
     }
     
-    // Water consumption counter - moderate consumption rate
     private int waterConsumptionTicks = 0;
-    private static final int TICKS_PER_WATER_CONSUMPTION = 5; // Consume 1 water every 5 minutes
+    private static final int TICKS_PER_WATER_CONSUMPTION = 5; // 1 water unit per 5 ticks (minutes)
     
     /**
-     * Updates plant state for one simulation tick (1 minute).
-     */
+    * Advances the plant by one simulation tick (1 minute).
+    * Handles water consumption, health recalculation, and death checks.
+    */
     public void update() {
         if (isDead.get()) {
             return;
@@ -88,9 +93,6 @@ public abstract class Plant {
         }
     }
     
-    /**
-     * Advances the plant's age by one day.
-     */
     public void advanceDay() {
         if (isDead.get()) {
             return;
@@ -109,9 +111,6 @@ public abstract class Plant {
         }
     }
     
-    /**
-     * Applies water to the plant.
-     */
     public void water(int amount) {
         if (isDead.get()) {
             return;
@@ -125,9 +124,6 @@ public abstract class Plant {
         }
     }
     
-    /**
-     * Applies damage to the plant.
-     */
     public void takeDamage(int amount) {
         if (isDead.get()) {
             return;
@@ -140,9 +136,6 @@ public abstract class Plant {
         }
     }
     
-    /**
-     * Heals the plant.
-     */
     public void heal(int amount) {
         if (isDead.get()) {
             return;
@@ -153,6 +146,7 @@ public abstract class Plant {
     
     /**
      * Records a pest attack on this plant.
+     * Increments both the current attack counter and the lifetime total.
      */
     public void pestAttack() {
         if (isDead.get()) {
@@ -172,15 +166,13 @@ public abstract class Plant {
     
     /**
      * Reduces pest attack count (after treatment).
+     * The lifetime total is not affected.
      */
     public void reducePestAttacks(int amount) {
         pestAttacks = Math.max(0, pestAttacks - amount);
         heal(amount * 2); // Healing from treatment
     }
     
-    /**
-     * Applies temperature effects to the plant.
-     */
     public void applyTemperatureEffect(int currentTemp) {
         if (isDead.get()) {
             return;
@@ -195,9 +187,6 @@ public abstract class Plant {
         }
     }
     
-    /**
-     * Applies weather effects to the plant.
-     */
     public void applyWeatherEffect(String weather) {
         if (isDead.get()) {
             return;
@@ -215,9 +204,6 @@ public abstract class Plant {
         }
     }
     
-    /**
-     * Marks the plant as dead.
-     */
     private void die() {
         if (!isDead.get()) {
             isDead.set(true);
@@ -227,9 +213,6 @@ public abstract class Plant {
         }
     }
     
-    /**
-     * Updates health based on current conditions.
-     */
     private void updateHealth() {
         // Water stress
         if (waterLevel.get() < waterRequirement / 2) {
@@ -248,23 +231,14 @@ public abstract class Plant {
      */
     public abstract int getGrowthDuration();
     
-    /**
-     * Gets the plant type name.
-     */
     public String getPlantType() {
         return plantType;
     }
     
-    /**
-     * Calculates health percentage (0-100).
-     */
     public double getHealthPercentage() {
         return healthLevel.get();
     }
     
-    /**
-     * Gets health status as a string.
-     */
     public String getHealthStatus() {
         int health = healthLevel.get();
         if (health >= 80) return "Healthy";
@@ -272,10 +246,7 @@ public abstract class Plant {
         if (health >= 20) return "Poor";
         return "Critical";
     }
-    
-    /**
-     * Gets color indicator based on health.
-     */
+
     public String getHealthColor() {
         int health = healthLevel.get();
         if (health >= 70) return "GREEN";
@@ -284,7 +255,6 @@ public abstract class Plant {
         return "RED";
     }
     
-    // Property getters for JavaFX binding
     public ObjectProperty<Position> positionProperty() { return position; }
     public ObjectProperty<GrowthStage> growthStageProperty() { return growthStage; }
     public IntegerProperty healthLevelProperty() { return healthLevel; }
@@ -292,7 +262,6 @@ public abstract class Plant {
     public IntegerProperty daysAliveProperty() { return daysAlive; }
     public BooleanProperty isDeadProperty() { return isDead; }
     
-    // Standard getters
     public Position getPosition() { return position.get(); }
     public GrowthStage getGrowthStage() { return growthStage.get(); }
     public int getHealthLevel() { return healthLevel.get(); }

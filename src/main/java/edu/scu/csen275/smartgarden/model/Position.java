@@ -3,20 +3,17 @@ package edu.scu.csen275.smartgarden.model;
 import java.util.Objects;
 
 /**
- * Represents a position in the garden grid.
- * Immutable value object for grid coordinates.
+ * Immutable value object representing a coordinate in the garden grid.
  */
 public final class Position {
     private final int row;
     private final int column;
     
     /**
-     * Creates a new Position.
-     * 
-     * @param row the row coordinate (0-based)
-     * @param column the column coordinate (0-based)
-     * @throws IllegalArgumentException if coordinates are negative
-     */
+    * Creates a position with zero-based row and column indices.
+     *
+    * @throws IllegalArgumentException if either coordinate is negative
+    */
     public Position(int row, int column) {
         if (row < 0 || column < 0) {
             throw new IllegalArgumentException(
@@ -35,8 +32,8 @@ public final class Position {
     }
     
     /**
-     * Checks if this position is adjacent to another position.
-     */
+    * Returns true if the two positions are adjacent (including diagonals).
+    */
     public boolean isAdjacentTo(Position other) {
         int rowDiff = Math.abs(this.row - other.row);
         int colDiff = Math.abs(this.column - other.column);
@@ -44,8 +41,8 @@ public final class Position {
     }
     
     /**
-     * Calculates Manhattan distance to another position.
-     */
+    * Returns the Manhattan distance between this position and another.
+    */
     public int distanceTo(Position other) {
         return Math.abs(this.row - other.row) + Math.abs(this.column - other.column);
     }

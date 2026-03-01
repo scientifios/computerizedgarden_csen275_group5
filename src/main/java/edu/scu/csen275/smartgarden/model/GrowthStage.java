@@ -1,7 +1,10 @@
 package edu.scu.csen275.smartgarden.model;
 
 /**
- * Represents the growth stages of a plant.
+ * Enumerates the lifecycle stages of a plant within the garden simulation.
+ *
+ * Each stage is associated with a display label and an ordinal stage number
+ * used for progression tracking.
  */
 public enum GrowthStage {
     SEED("Seed", 0),
@@ -27,8 +30,9 @@ public enum GrowthStage {
     }
     
     /**
-     * Gets the next growth stage, or returns current if at max.
-     */
+    * Returns the next lifecycle stage.
+    * If this stage is already the final stage, the current stage is returned.
+    */
     public GrowthStage next() {
         GrowthStage[] stages = values();
         int nextIndex = this.ordinal() + 1;
@@ -36,8 +40,8 @@ public enum GrowthStage {
     }
     
     /**
-     * Checks if this is the final stage.
-     */
+    * Indicates whether this stage represents terminal plant development.
+    */
     public boolean isFinalStage() {
         return this == FRUITING;
     }

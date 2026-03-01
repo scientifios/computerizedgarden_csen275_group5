@@ -1,8 +1,13 @@
 package edu.scu.csen275.smartgarden.model;
 
 /**
- * Represents a vegetable crop in the garden.
- * Vegetables grow quickly but require high water and care.
+ * Concrete implementation of {@link Plant} representing a vegetable crop.
+ *
+ * Vegetables exhibit a relatively fast growth rate and require
+ * higher water intake and favorable environmental conditions.
+ *
+ * This class configures vegetable-specific parameters while
+ * reusing the shared lifecycle logic defined in Plant.
  */
 public class Vegetable extends Plant {
     private static final int DEFAULT_LIFESPAN = 90; // days

@@ -1,20 +1,18 @@
 package edu.scu.csen275.smartgarden.model;
 
 /**
- * Enum representing all available plant types with their emojis, display names, and categories.
+ * Enumerates selectable plant types along with their display metadata.
  */
 public enum PlantType {
-    // Fruit Plants
+
     STRAWBERRY("🍓", "Strawberry", PlantCategory.FRUIT),
     GRAPEVINE("🍇", "Grapevine", PlantCategory.FRUIT),
     APPLE("🍎", "Apple Sapling", PlantCategory.FRUIT),
     
-    // Vegetable Crops
     CARROT("🥕", "Carrot", PlantCategory.VEGETABLE),
     TOMATO("🍅", "Tomato", PlantCategory.VEGETABLE),
     ONION("🧅", "Onion", PlantCategory.VEGETABLE),
     
-    // Flowers
     SUNFLOWER("🌻", "Sunflower", PlantCategory.FLOWER),
     TULIP("🌸", "Tulip", PlantCategory.FLOWER),
     ROSE("🌹", "Rose", PlantCategory.FLOWER);
@@ -42,8 +40,8 @@ public enum PlantType {
     }
     
     /**
-     * Gets the category header text for display in dropdown.
-     */
+    * Returns a formatted UI header for the given plant category.
+    */
     public static String getCategoryHeader(PlantCategory category) {
         return switch (category) {
             case FRUIT -> "🍓 Fruit Plants";
