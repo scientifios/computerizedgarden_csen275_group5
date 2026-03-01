@@ -76,7 +76,7 @@ public class SmartGardenApplication extends Application {
             primaryStage.setTitle("🌿 Smart Garden Simulation - CSEN 275");
             primaryStage.setScene(scene);
             primaryStage.setMinWidth(900);
-            primaryStage.setMinHeight(600);
+            primaryStage.setMinHeight(900);
             Rectangle2D visualBounds = Screen.getPrimary().getVisualBounds();
             double targetWidth = Math.min(1400, visualBounds.getWidth() * 0.95);
             double targetHeight = Math.min(900, visualBounds.getHeight() * 0.95);
@@ -188,6 +188,12 @@ public class SmartGardenApplication extends Application {
         // Create log panel
         VBox logPanel = createLogPanel();
         
+        // Center panel: log on top, garden below (integrated)
+        VBox centerPanel = new VBox();
+        centerPanel.setStyle("-fx-background-color: transparent;");
+        VBox.setVgrow(centerContainer, Priority.ALWAYS);
+        centerPanel.getChildren().addAll(logPanel, centerContainer);
+        
         // Root BorderPane with transparent background
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: transparent;");
@@ -195,28 +201,12 @@ public class SmartGardenApplication extends Application {
         // Make toolbar semi-transparent so clouds show through
         toolbar.setStyle("-fx-background-color: rgba(46, 125, 50, 0.85);");
         
-        // Layout UI on top
-        // root.setTop(toolbar);
-        // root.setCenter(centerContainer);
-        // root.setRight(infoPanel);
-        // root.setBottom(logPanel);
         root.setBottom(toolbar);
-        root.setCenter(centerContainer);
-        root.setTop(logPanel);
+        root.setCenter(centerPanel);
         root.setLeft(infoPanel);
 
-
-        ScrollPane mainScrollPane = new ScrollPane(root);
-        mainScrollPane.setFitToWidth(true);
-        mainScrollPane.setFitToHeight(true);
-        mainScrollPane.setPannable(true);
-        mainScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        mainScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        mainScrollPane.setStyle("-fx-background-color: transparent;");
-        
-        // Stack everything: animated background behind (fills entire scene), UI on top
         StackPane rootStack = new StackPane();
-        rootStack.getChildren().addAll(animatedBackground, mainScrollPane);
+        rootStack.getChildren().addAll(animatedBackground, root);
         
         // Make background fill entire stack and be visible
         StackPane.setAlignment(animatedBackground, javafx.geometry.Pos.TOP_LEFT);
@@ -290,7 +280,7 @@ public class SmartGardenApplication extends Application {
         logPanel.setVisible(true); // Ensure visible
         logPanel.setManaged(true); // Ensure managed
         
-        Label logTitle = new Label("📋 Recent Events");
+        Label logTitle = new Label("Events");
         logTitle.getStyleClass().add("log-title");
         
         logListView = new ListView<>();
