@@ -75,11 +75,11 @@ public class SmartGardenApplication extends Application {
             // Setup stage
             primaryStage.setTitle("Smart Garden Simulation - CSEN 275");
             primaryStage.setScene(scene);
-            primaryStage.setMinWidth(900);
-            primaryStage.setMinHeight(900);
+            primaryStage.setMinWidth(1400);
+            primaryStage.setMinHeight(1000);
             Rectangle2D visualBounds = Screen.getPrimary().getVisualBounds();
-            double targetWidth = Math.min(1400, visualBounds.getWidth() * 0.95);
-            double targetHeight = Math.min(900, visualBounds.getHeight() * 0.95);
+            double targetWidth = Math.min(1900, visualBounds.getWidth() * 0.95);
+            double targetHeight = Math.min(1200, visualBounds.getHeight() * 0.95);
             primaryStage.setWidth(Math.max(primaryStage.getMinWidth(), targetWidth));
             primaryStage.setHeight(Math.max(primaryStage.getMinHeight(), targetHeight));
             primaryStage.centerOnScreen();
@@ -202,6 +202,8 @@ public class SmartGardenApplication extends Application {
         root.setBottom(toolbar);
         root.setCenter(centerPanel);
         root.setLeft(infoPanel);
+        BorderPane.setMargin(centerPanel, new Insets(10));
+        BorderPane.setMargin(infoPanel, new Insets(10));
 
         StackPane rootStack = new StackPane();
         rootStack.getChildren().addAll(animatedBackground, root);
