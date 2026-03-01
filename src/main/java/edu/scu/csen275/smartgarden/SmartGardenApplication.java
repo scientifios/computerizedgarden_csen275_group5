@@ -75,13 +75,13 @@ public class SmartGardenApplication extends Application {
             // Setup stage
             primaryStage.setTitle("Smart Garden Simulation - CSEN 275");
             primaryStage.setScene(scene);
-            primaryStage.setMinWidth(1400);
-            primaryStage.setMinHeight(1000);
+            primaryStage.setMinWidth(900);
+            primaryStage.setMinHeight(600);
             Rectangle2D visualBounds = Screen.getPrimary().getVisualBounds();
-            double targetWidth = Math.min(1900, visualBounds.getWidth() * 0.95);
-            double targetHeight = Math.min(1200, visualBounds.getHeight() * 0.95);
-            primaryStage.setWidth(Math.max(primaryStage.getMinWidth(), targetWidth));
-            primaryStage.setHeight(Math.max(primaryStage.getMinHeight(), targetHeight));
+            double targetWidth = Math.max(900, Math.min(1400, visualBounds.getWidth() * 0.95));
+            double targetHeight = Math.max(600, Math.min(900, visualBounds.getHeight() * 0.95));
+            primaryStage.setWidth(targetWidth);
+            primaryStage.setHeight(targetHeight);
             primaryStage.centerOnScreen();
             primaryStage.setOnCloseRequest(e -> {
                 controller.shutdown();
@@ -205,8 +205,16 @@ public class SmartGardenApplication extends Application {
         BorderPane.setMargin(centerPanel, new Insets(10));
         BorderPane.setMargin(infoPanel, new Insets(10));
 
+        ScrollPane mainScrollPane = new ScrollPane(root);
+        mainScrollPane.setFitToWidth(true);
+        mainScrollPane.setFitToHeight(true);
+        mainScrollPane.setPannable(true);
+        mainScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        mainScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        mainScrollPane.setStyle("-fx-background-color: transparent;");
+
         StackPane rootStack = new StackPane();
-        rootStack.getChildren().addAll(animatedBackground, root);
+        rootStack.getChildren().addAll(animatedBackground, mainScrollPane);
         
         // Make background fill entire stack and be visible
         StackPane.setAlignment(animatedBackground, javafx.geometry.Pos.TOP_LEFT);
