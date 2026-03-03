@@ -15,12 +15,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Headless simulation engine for API/monitoring use.
- * Uses ScheduledExecutorService instead of JavaFX Timeline.
- * Shares the same systems as SimulationEngine for consistency.
- * 
- * This allows the API to run continuous simulation in headless mode,
- * enabling true 24-hour survival testing without requiring JavaFX.
+ * Headless simulation loop (no JavaFX).
+ * Runs on ScheduledExecutorService and can reuse the same systems as SimulationEngine.
  */
 public class HeadlessSimulationEngine {
     private final Garden garden;
@@ -38,18 +34,15 @@ public class HeadlessSimulationEngine {
     private volatile LocalDateTime simulationTime;
     
     private static final Logger logger = Logger.getInstance();
-    private static final int BASE_TICK_INTERVAL_MS = 1000; // 1 second real time = 1 minute sim time
-    private static final int TICKS_PER_SIM_DAY = 1440; // 1440 minutes in a day
+    private static final int BASE_TICK_INTERVAL_MS = 1000; // 1s real = 1 min sim
+    private static final int TICKS_PER_SIM_DAY = 1440;     // minutes/day
     
-    // Track active instances for automatic cleanup
+    // Active instances for JVM shutdown cleanup
     private static final Set<HeadlessSimulationEngine> activeInstances = ConcurrentHashMap.newKeySet();
     private static volatile boolean shutdownHookRegistered = false;
     private static final Object shutdownLock = new Object();
     
-    /**
-     * Creates a new HeadlessSimulationEngine with new systems.
-     * Use this when you want independent systems from SimulationEngine.
-     */
+    /** Creates an engine with its own system instances (independent from SimulationEngine). */
     public HeadlessSimulationEngine(Garden garden) {
         this.garden = garden;
         this.wateringSystem = new WateringSystem(garden);
@@ -58,7 +51,7 @@ public class HeadlessSimulationEngine {
         this.pestControlSystem = new PestControlSystem(garden);
         this.weatherSystem = new WeatherSystem(garden, this.heatingSystem, this.coolingSystem);
         
-        // Connect weather system to watering system
+        // Connect weather -> watering
         this.wateringSystem.setWeatherSystem(this.weatherSystem);
         
         this.simulationTime = LocalDateTime.now();
@@ -68,24 +61,13 @@ public class HeadlessSimulationEngine {
             return t;
         });
         
-        // Register this instance for automatic cleanup
         activeInstances.add(this);
         registerShutdownHook();
         
         logger.info("Simulation", "Headless simulation engine created");
     }
     
-    /**
-     * Creates a new HeadlessSimulationEngine reusing systems from existing SimulationEngine.
-     * This allows both engines to share the same systems for consistency.
-     * 
-     * @param garden The garden model
-     * @param wateringSystem Shared watering system
-     * @param heatingSystem Shared heating system
-     * @param coolingSystem Shared cooling system
-     * @param pestControlSystem Shared pest control system
-     * @param weatherSystem Shared weather system
-     */
+    /** Creates an engine reusing existing system instances (shared state with SimulationEngine). */
     public HeadlessSimulationEngine(Garden garden, 
                                     WateringSystem wateringSystem,
                                     HeatingSystem heatingSystem,
@@ -106,18 +88,13 @@ public class HeadlessSimulationEngine {
             return t;
         });
         
-        // Register this instance for automatic cleanup
         activeInstances.add(this);
         registerShutdownHook();
         
         logger.info("Simulation", "Headless simulation engine created (reusing systems)");
     }
     
-    /**
-     * Registers a JVM shutdown hook to automatically stop all active simulation engines.
-     * This ensures cleanup happens even if stop() is not explicitly called.
-     * Only registers once for all instances.
-     */
+    /** Registers one JVM shutdown hook to stop all active instances. */
     private static void registerShutdownHook() {
         synchronized (shutdownLock) {
             if (shutdownHookRegistered) {
@@ -147,10 +124,6 @@ public class HeadlessSimulationEngine {
         }
     }
     
-    /**
-     * Starts the headless simulation loop.
-     * Plants will update continuously, water will decrease, systems will respond automatically.
-     */
     public void start() {
         if (isRunning) {
             logger.warning("Simulation", "Headless simulation already running");
@@ -166,10 +139,6 @@ public class HeadlessSimulationEngine {
         scheduler.scheduleAtFixedRate(this::tick, 0, BASE_TICK_INTERVAL_MS, TimeUnit.MILLISECONDS);
     }
     
-    /**
-     * Stops the headless simulation loop.
-     * Note: This is optional - shutdown hook will handle cleanup automatically when JVM exits.
-     */
     public void stop() {
         if (!isRunning) {
             return;
@@ -188,10 +157,6 @@ public class HeadlessSimulationEngine {
         logger.info("Simulation", "Headless simulation stopped at tick " + elapsedTicks.get());
     }
     
-    /**
-     * Main simulation tick - same logic as SimulationEngine.tick()
-     * Called every BASE_TICK_INTERVAL_MS milliseconds.
-     */
     private void tick() {
         if (!isRunning) {
             return;
@@ -201,32 +166,25 @@ public class HeadlessSimulationEngine {
             elapsedTicks.incrementAndGet();
             ticksPerDay++;
             
-            // Advance simulation time by 1 minute
             simulationTime = simulationTime.plusMinutes(1);
             
-            // Update all plants (water decreases, health updates)
             updatePlants();
             
-            // Update all systems
             wateringSystem.checkAndWater();
             heatingSystem.update();
             coolingSystem.update();
             pestControlSystem.update();
             weatherSystem.update();
             
-            // Auto-refill water and pesticide if below threshold
             autoRefillSupplies();
             
-            // Check for new day
             if (ticksPerDay >= TICKS_PER_SIM_DAY) {
                 advanceDay();
                 ticksPerDay = 0;
             }
             
-            // Update garden living count
             garden.updateLivingCount();
             
-            // Log every 100 ticks
             if (elapsedTicks.get() % 100 == 0) {
                 logger.debug("Simulation", "Headless Tick " + elapsedTicks.get() + 
                             " | Day " + dayCounter.get() + 
@@ -239,19 +197,12 @@ public class HeadlessSimulationEngine {
         }
     }
     
-    /**
-     * Updates all plants in the garden.
-     * This causes water to decrease, health to update based on conditions.
-     */
     private void updatePlants() {
         for (Plant plant : garden.getAllPlants()) {
             plant.update();
         }
     }
     
-    /**
-     * Advances to a new simulation day.
-     */
     private void advanceDay() {
         int day = dayCounter.incrementAndGet();
         logger.info("Simulation", "Headless Day " + day + " complete. Living plants: " + 
@@ -263,12 +214,9 @@ public class HeadlessSimulationEngine {
         }
     }
     
-    /**
-     * Automatically refills water and pesticide supplies when they drop below threshold.
-     * Same logic as SimulationEngine.
-     */
+    /** Auto-refill policy (kept consistent with SimulationEngine). */
     private void autoRefillSupplies() {
-        // Water supply threshold: 20% of initial (2000L out of 10000L)
+        // Water: refill to INITIAL when below threshold (20%).
         final int WATER_THRESHOLD = 2000;
         final int INITIAL_WATER = 10000;
         
@@ -280,7 +228,7 @@ public class HeadlessSimulationEngine {
                        INITIAL_WATER + "L");
         }
         
-        // Pesticide stock threshold: 20% of initial (10 out of 50)
+        // Pesticide: refill to INITIAL when below threshold (20%).
         final int PESTICIDE_THRESHOLD = 10;
         final int INITIAL_PESTICIDE = 50;
         
@@ -293,7 +241,6 @@ public class HeadlessSimulationEngine {
         }
     }
     
-    // Getters for systems (same interface as SimulationEngine)
     public WateringSystem getWateringSystem() { return wateringSystem; }
     public HeatingSystem getHeatingSystem() { return heatingSystem; }
     public CoolingSystem getCoolingSystem() { return coolingSystem; }
