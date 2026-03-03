@@ -9,7 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Automated heating system that maintains optimal temperature for plants.
+ * Automated heating system that maintains garden temperature within a configurable target range.
+ * Uses the average sensor temperature across zones, applies hysteresis to avoid rapid cycling
  */
 public class HeatingSystem {
     private final Garden garden;
@@ -19,7 +20,7 @@ public class HeatingSystem {
     private final IntegerProperty targetMaxTemperature;
     private final ObjectProperty<HeatingMode> heatingMode;
     private final IntegerProperty energyConsumption;
-    private boolean apiModeEnabled = false; // When enabled, temperature change logs are suppressed
+    private boolean apiModeEnabled = false; // Suppresses API-driven ambient temperature set logs (setAmbientTemperature)
     
     private static final Logger logger = Logger.getInstance();
     private static final int DEFAULT_MIN_TEMP = 15; // Celsius
@@ -54,13 +55,14 @@ public class HeatingSystem {
     }
     
     /**
-     * Monitors temperature and adjusts heating as needed.
+     * Updates heating once per simulation tick.
+     * Computes the average temperature across zone sensors and adjusts heating mode using
+     * the configured target range with hysteresis, then applies temperature effects to plants.
      */
     public void update() {
         int avgTemp = calculateAverageTemperature();
         currentTemperature.set(avgTemp);
         
-        // Determine heating mode based on temperature
         if (avgTemp < targetMinTemperature.get()) {
             activateHeating();
         } else if (avgTemp > targetMaxTemperature.get()) {
@@ -70,7 +72,6 @@ public class HeatingSystem {
             deactivateHeating();
         }
         
-        // Apply temperature effects to plants
         applyTemperatureEffects();
     }
     
@@ -83,7 +84,6 @@ public class HeatingSystem {
                        currentTemperature.get() + "°C");
         }
         
-        // Set heating mode based on temperature deficit
         int deficit = targetMinTemperature.get() - currentTemperature.get();
         if (deficit > 10) {
             heatingMode.set(HeatingMode.HIGH);
@@ -93,7 +93,6 @@ public class HeatingSystem {
             heatingMode.set(HeatingMode.LOW);
         }
         
-        // Increase temperature based on mode
         int increase = switch (heatingMode.get()) {
             case HIGH -> 3;
             case MEDIUM -> 2;
@@ -115,8 +114,7 @@ public class HeatingSystem {
                        currentTemperature.get() + "°C");
         }
         
-        // Don't apply natural cooling - weather system controls temperature
-        // Natural cooling removed to prevent interference with weather-set temperatures
+        // Natural cooling is intentionally omitted to avoid interfering with WeatherSystem temperature control.
     }
     
     /**
@@ -128,7 +126,6 @@ public class HeatingSystem {
             int newTemp = zone.getTemperature() + amount;
             zone.setTemperature(newTemp);
         }
-        // Update current temperature (it's calculated from zones in monitor(), but log here)
         int newTemp = oldTemp + amount;
         logger.info("Heating", "Temperature increasing: " + oldTemp + "°C → " + newTemp + "°C (increased by " + amount + "°C)");
     }
@@ -162,7 +159,7 @@ public class HeatingSystem {
         
         for (TemperatureSensor sensor : sensors.values()) {
             int reading = sensor.readValue();
-            if (reading > -999) { // Valid reading
+            if (reading > -999) { // Ignore invalid readings
                 sum += reading;
                 count++;
             }
@@ -198,8 +195,8 @@ public class HeatingSystem {
     }
     
     /**
-     * Sets whether API mode is enabled.
-     * When enabled, temperature change logs are suppressed.
+     * Enables/disables API mode logging behavior.
+     * When enabled, suppresses the log message produced by setAmbientTemperature().
      */
     public void setApiModeEnabled(boolean enabled) {
         this.apiModeEnabled = enabled;
@@ -226,7 +223,6 @@ public class HeatingSystem {
                heatingMode.get() + ", Energy: " + energyConsumption.get() + " units";
     }
     
-    // Property getters
     public IntegerProperty currentTemperatureProperty() {
         return currentTemperature;
     }
@@ -247,7 +243,6 @@ public class HeatingSystem {
         return energyConsumption;
     }
     
-    // Value getters
     public int getCurrentTemperature() {
         return currentTemperature.get();
     }
@@ -268,9 +263,6 @@ public class HeatingSystem {
         return energyConsumption.get();
     }
     
-    /**
-     * Heating mode enumeration.
-     */
     public enum HeatingMode {
         OFF,
         LOW,

@@ -3,7 +3,7 @@ package edu.scu.csen275.smartgarden.system;
 import edu.scu.csen275.smartgarden.model.Zone;
 
 /**
- * Sensor that measures soil moisture levels in a zone.
+ * Zone-scoped sensor that exposes the zone's current moisture level.
  */
 public class MoistureSensor extends Sensor {
     
@@ -16,11 +16,10 @@ public class MoistureSensor extends Sensor {
         updateReadingTime();
         
         try {
-            // Read moisture level from zone
             return zone.getMoistureLevel();
         } catch (Exception e) {
             status = SensorStatus.ERROR;
-            return -1; // Error indicator
+            return -1; // Sentinel value for a failed sensor read
         }
     }
     

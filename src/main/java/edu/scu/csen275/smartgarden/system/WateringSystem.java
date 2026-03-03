@@ -11,7 +11,8 @@ import java.util.List;
 import edu.scu.csen275.smartgarden.model.Plant;
 
 /**
- * Automated watering system that manages irrigation across all zones.
+ * Irrigation controller for the garden simulation.
+ * Tracks per-zone sprinklers and moisture sensors, and coordinates watering while respecting rain events.
  */
 public class WateringSystem {
     private final Garden garden;
@@ -19,15 +20,15 @@ public class WateringSystem {
     private final Map<Integer, MoistureSensor> sensors;
     private final IntegerProperty waterSupply;
     private final IntegerProperty moistureThreshold;
-    private WeatherSystem weatherSystem; // Reference to weather system
+    private WeatherSystem weatherSystem; // used to skip/stop watering during rain
     
     private static final Logger logger = Logger.getInstance();
-    private static final int INITIAL_WATER_SUPPLY = 10000; // liters
-    private static final int DEFAULT_MOISTURE_THRESHOLD = 40; // percentage
-    private static final int WATER_PER_CYCLE = 10; // amount to water per cycle
-    
+    private static final int INITIAL_WATER_SUPPLY = 10000; // L
+    private static final int DEFAULT_MOISTURE_THRESHOLD = 40; // %
+    private static final int WATER_PER_CYCLE = 10; // L per watering action
+
     /**
-     * Creates a new WateringSystem for the garden.
+     * Initializes irrigation components (sprinklers + moisture sensors) for each zone.
      */
     public WateringSystem(Garden garden) {
         this.garden = garden;
@@ -42,18 +43,16 @@ public class WateringSystem {
     }
     
     /**
-     * Sets the weather system reference to check for rain.
-     * Also adds a listener to stop sprinklers when rain starts.
+     * Connects a WeatherSystem to suppress watering during rain and stop active sprinklers when rain begins.
      */
     public void setWeatherSystem(WeatherSystem weatherSystem) {
         this.weatherSystem = weatherSystem;
         logger.info("Watering", "Weather system connected - will skip watering when raining");
         
-        // Add listener to stop sprinklers when weather changes to RAINY
+        // Stop active sprinklers when rain begins.
         if (weatherSystem != null) {
             weatherSystem.currentWeatherProperty().addListener((obs, oldWeather, newWeather) -> {
                 if (newWeather == WeatherSystem.Weather.RAINY && oldWeather != WeatherSystem.Weather.RAINY) {
-                    // Rain just started - stop all active sprinklers
                     stopAllSprinklers();
                     logger.info("Watering", "Rain detected - stopped all active sprinklers");
                 }
@@ -62,7 +61,7 @@ public class WateringSystem {
     }
     
     /**
-     * Initializes sprinklers and sensors for each zone.
+     * Creates one sprinkler and one moisture sensor per zone.
      */
     private void initializeSprinklersAndSensors() {
         for (Zone zone : garden.getZones()) {
@@ -72,12 +71,10 @@ public class WateringSystem {
     }
     
     /**
-     * Checks moisture levels in all zones and waters if needed.
-     * Now checks individual plant water levels for automatic watering.
-     * SKIPS watering if it's currently raining.
+     * Runs an automatic watering pass for all zones.
+     * Skips watering during rain and waters zones that contain plants needing water.
      */
     public void checkAndWater() {
-        // Check if it's raining - don't water if it is
         if (weatherSystem != null && weatherSystem.getCurrentWeather() == WeatherSystem.Weather.RAINY) {
             logger.info("Watering", "Skipping watering - it's currently raining");
             return;
@@ -88,7 +85,6 @@ public class WateringSystem {
             return;
         }
         
-        // Check individual plants that need water
         for (Zone zone : garden.getZones()) {
             MoistureSensor sensor = sensors.get(zone.getZoneId());
             
@@ -97,11 +93,9 @@ public class WateringSystem {
                 continue;
             }
             
-            // Check if any plants in this zone need water
             List<Plant> plantsNeedingWater = zone.getPlantsNeedingWater();
             
             if (!plantsNeedingWater.isEmpty() && zone.getLivingPlantCount() > 0) {
-                // Water the zone to hydrate plants
                 waterZone(zone.getZoneId(), WATER_PER_CYCLE);
                 logger.info("Watering", "Auto-watered Zone " + zone.getZoneId() + 
                            " - " + plantsNeedingWater.size() + " plants needed water");
@@ -110,8 +104,7 @@ public class WateringSystem {
     }
     
     /**
-     * Waters a specific zone with given amount.
-     * Checks weather before and during watering - stops if it starts raining.
+     * Waters a zone using its sprinkler, subject to available supply and rain conditions.
      */
     public void waterZone(int zoneId, int amount) {
         Sprinkler sprinkler = sprinklers.get(zoneId);
@@ -122,7 +115,6 @@ public class WateringSystem {
             return;
         }
         
-        // Check if it's raining before starting
         if (weatherSystem != null && weatherSystem.getCurrentWeather() == WeatherSystem.Weather.RAINY) {
             logger.info("Watering", "Skipping watering Zone " + zoneId + " - it's currently raining");
             return;
@@ -137,23 +129,18 @@ public class WateringSystem {
             return;
         }
         
-        // Activate sprinkler
         sprinkler.activate();
         
-        // Check weather again before distributing water (in case it started raining)
         if (weatherSystem != null && weatherSystem.getCurrentWeather() == WeatherSystem.Weather.RAINY) {
             logger.info("Watering", "Stopping watering Zone " + zoneId + " - rain detected");
             sprinkler.deactivate();
             return;
         }
         
-        // Distribute water
         int waterUsed = sprinkler.distributeWater(amount);
         
-        // Update supply
         waterSupply.set(waterSupply.get() - waterUsed);
         
-        // Deactivate sprinkler
         sprinkler.deactivate();
         
         logger.info("Watering", "Zone " + zoneId + " watered with " + waterUsed + 
@@ -161,7 +148,7 @@ public class WateringSystem {
     }
     
     /**
-     * Stops all active sprinklers (called when rain starts).
+     * Stops any currently active sprinklers.
      */
     public void stopAllSprinklers() {
         for (Sprinkler sprinkler : sprinklers.values()) {
@@ -173,7 +160,7 @@ public class WateringSystem {
     }
     
     /**
-     * Manually waters a zone (user override).
+     * Triggers a watering action for the given zone id.
      */
     public void manualWater(int zoneId) {
         logger.info("Watering", "Manual watering triggered for Zone " + zoneId);
@@ -181,7 +168,7 @@ public class WateringSystem {
     }
     
     /**
-     * Updates moisture threshold.
+     * Updates the configured moisture threshold (%).
      */
     public void setMoistureThreshold(int threshold) {
         if (threshold < 0 || threshold > 100) {
@@ -192,7 +179,7 @@ public class WateringSystem {
     }
     
     /**
-     * Refills water supply.
+     * Adds water to the system supply.
      */
     public void refillWater(int amount) {
         waterSupply.set(waterSupply.get() + amount);
@@ -201,27 +188,20 @@ public class WateringSystem {
     }
     
     /**
-     * Checks if water is available.
+     * @return true if the system has remaining water supply
      */
     public boolean isWaterAvailable() {
         return waterSupply.get() > 0;
     }
     
-    /**
-     * Gets sensor for a zone.
-     */
     public MoistureSensor getSensor(int zoneId) {
         return sensors.get(zoneId);
     }
     
-    /**
-     * Gets sprinkler for a zone.
-     */
     public Sprinkler getSprinkler(int zoneId) {
         return sprinklers.get(zoneId);
     }
     
-    // Property getters
     public IntegerProperty waterSupplyProperty() {
         return waterSupply;
     }
@@ -230,7 +210,6 @@ public class WateringSystem {
         return moistureThreshold;
     }
     
-    // Value getters
     public int getWaterSupply() {
         return waterSupply.get();
     }

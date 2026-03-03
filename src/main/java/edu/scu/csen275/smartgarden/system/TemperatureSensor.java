@@ -3,7 +3,8 @@ package edu.scu.csen275.smartgarden.system;
 import edu.scu.csen275.smartgarden.model.Zone;
 
 /**
- * Sensor that measures temperature in a zone.
+ * Zone-scoped sensor that reports the zone's current temperature.
+ * On read failure, marks the sensor as ERROR and returns a sentinel value.
  */
 public class TemperatureSensor extends Sensor {
     
@@ -16,11 +17,10 @@ public class TemperatureSensor extends Sensor {
         updateReadingTime();
         
         try {
-            // Read temperature from zone
             return zone.getTemperature();
         } catch (Exception e) {
             status = SensorStatus.ERROR;
-            return -999; // Error indicator
+            return -999; // Sensor read failure sentinel
         }
     }
     

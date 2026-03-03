@@ -9,8 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Automated cooling system that maintains optimal temperature for plants.
- * Activates when temperature exceeds the maximum temperature of any plant.
+ * Automated cooling system that maintains garden temperatures within plant-safe limits.
+ * Uses the average sensor temperature across zones and compares it against the highest
+ * maxTemperature among living plants, with hysteresis to avoid rapid on/off cycling.
  */
 public class CoolingSystem {
     private final Garden garden;
@@ -18,7 +19,7 @@ public class CoolingSystem {
     private final IntegerProperty currentTemperature;
     private final ObjectProperty<CoolingMode> coolingMode;
     private final IntegerProperty energyConsumption;
-    private boolean apiModeEnabled = false; // When enabled, temperature change logs are suppressed
+    private boolean apiModeEnabled = false; // Suppresses API-driven ambient temperature set logs (setAmbientTemperature)
     
     private static final Logger logger = Logger.getInstance();
     private static final int DEFAULT_AMBIENT_TEMP = 20;
@@ -47,27 +48,25 @@ public class CoolingSystem {
     }
     
     /**
-     * Monitors temperature and adjusts cooling as needed.
-     * Activates cooling if temperature exceeds maxTemperature of any plant.
+     * Updates cooling once per simulation tick.
+     * Computes the average temperature across zone sensors, compares it against the highest
+     * maxTemperature among living plants (with hysteresis), and then applies temperature effects
+     * to each plant based on its zone temperature.
      */
     public void update() {
         int avgTemp = calculateAverageTemperature();
         currentTemperature.set(avgTemp);
         
-        // Find the highest maxTemperature among all living plants
         int maxPlantTemp = getMaxTemperatureThreshold();
         
-        // Determine cooling mode based on temperature
         if (maxPlantTemp > 0 && avgTemp > maxPlantTemp) {
             activateCooling(maxPlantTemp);
         } else if (avgTemp <= maxPlantTemp - 2) {
-            // Slight hysteresis to avoid rapid cycling
             deactivateCooling();
         } else {
             deactivateCooling();
         }
         
-        // Apply temperature effects to plants
         applyTemperatureEffects();
     }
     
@@ -86,7 +85,8 @@ public class CoolingSystem {
     }
     
     /**
-     * Activates cooling system.
+     * Activates cooling when the current temperature exceeds the plant threshold.
+     * Selects a cooling mode based on the excess and applies a temperature decrease.
      */
     private void activateCooling(int maxPlantTemp) {
         int excess = currentTemperature.get() - maxPlantTemp;
@@ -96,7 +96,6 @@ public class CoolingSystem {
                        currentTemperature.get() + "°C (max threshold: " + maxPlantTemp + "°C)");
         }
         
-        // Set cooling mode based on temperature excess
         if (excess > 10) {
             coolingMode.set(CoolingMode.HIGH);
         } else if (excess > 5) {
@@ -105,7 +104,6 @@ public class CoolingSystem {
             coolingMode.set(CoolingMode.LOW);
         }
         
-        // Decrease temperature based on mode
         int decrease = switch (coolingMode.get()) {
             case HIGH -> 3;
             case MEDIUM -> 2;
@@ -118,7 +116,7 @@ public class CoolingSystem {
     }
     
     /**
-     * Deactivates cooling system.
+     * Turns cooling off (mode = OFF) and logs the transition once.
      */
     private void deactivateCooling() {
         if (coolingMode.get() != CoolingMode.OFF) {
@@ -129,7 +127,7 @@ public class CoolingSystem {
     }
     
     /**
-     * Decreases temperature in all zones.
+     * Decreases the temperature of all zones by the given amount (clamped to 0) and logs the change.
      */
     private void decreaseTemperature(int amount) {
         int oldTemp = currentTemperature.get();
@@ -137,7 +135,6 @@ public class CoolingSystem {
             int newTemp = Math.max(0, zone.getTemperature() - amount);
             zone.setTemperature(newTemp);
         }
-        // Update current temperature
         int newTemp = Math.max(0, oldTemp - amount);
         logger.info("Cooling", "Temperature decreasing: " + oldTemp + "°C → " + newTemp + "°C (decreased by " + amount + "°C)");
     }
@@ -155,7 +152,7 @@ public class CoolingSystem {
         
         for (TemperatureSensor sensor : sensors.values()) {
             int reading = sensor.readValue();
-            if (reading > -999) { // Valid reading
+            if (reading > -999) { // Ignore invalid readings
                 sum += reading;
                 count++;
             }
@@ -191,8 +188,8 @@ public class CoolingSystem {
     }
     
     /**
-     * Sets whether API mode is enabled.
-     * When enabled, temperature change logs are suppressed.
+     * Enables/disables API mode logging behavior.
+     * When enabled, suppresses the log message produced by setAmbientTemperature().
      */
     public void setApiModeEnabled(boolean enabled) {
         this.apiModeEnabled = enabled;
@@ -206,7 +203,6 @@ public class CoolingSystem {
                coolingMode.get() + ", Energy: " + energyConsumption.get() + " units";
     }
     
-    // Property getters
     public IntegerProperty currentTemperatureProperty() {
         return currentTemperature;
     }
@@ -219,7 +215,6 @@ public class CoolingSystem {
         return energyConsumption;
     }
     
-    // Value getters
     public int getCurrentTemperature() {
         return currentTemperature.get();
     }
@@ -232,9 +227,6 @@ public class CoolingSystem {
         return energyConsumption.get();
     }
     
-    /**
-     * Cooling mode enumeration.
-     */
     public enum CoolingMode {
         OFF,
         LOW,

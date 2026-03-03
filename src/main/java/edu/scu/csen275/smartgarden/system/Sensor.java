@@ -4,7 +4,8 @@ import edu.scu.csen275.smartgarden.model.Zone;
 import java.time.LocalDateTime;
 
 /**
- * Abstract base class for all sensors in the garden.
+ * Base sensor model bound to a zone.
+ * Tracks status and last-read timestamp; subclasses provide the measurement value.
  */
 public abstract class Sensor {
     protected final String sensorId;
@@ -13,7 +14,7 @@ public abstract class Sensor {
     protected SensorStatus status;
     
     /**
-     * Creates a new Sensor.
+     * Initializes a zone-scoped sensor with an id and default ACTIVE status.
      */
     protected Sensor(String sensorId, Zone zone) {
         this.sensorId = sensorId;
@@ -23,13 +24,12 @@ public abstract class Sensor {
     }
     
     /**
-     * Reads the current sensor value.
-     * Subclasses implement specific measurement logic.
+     * Returns the current reading for this sensor.
      */
     public abstract int readValue();
     
     /**
-     * Calibrates the sensor.
+     * Resets the sensor to ACTIVE and refreshes the last-read timestamp.
      */
     public void calibrate() {
         status = SensorStatus.ACTIVE;
@@ -37,20 +37,19 @@ public abstract class Sensor {
     }
     
     /**
-     * Reports the current sensor status.
+     * @return current sensor status
      */
     public SensorStatus reportStatus() {
         return status;
     }
     
     /**
-     * Updates last reading timestamp.
+     * Updates the last-read timestamp to now.
      */
     protected void updateReadingTime() {
         lastReading = LocalDateTime.now();
     }
     
-    // Getters
     public String getSensorId() {
         return sensorId;
     }
@@ -67,9 +66,6 @@ public abstract class Sensor {
         return status;
     }
     
-    /**
-     * Sensor status enumeration.
-     */
     public enum SensorStatus {
         ACTIVE,
         INACTIVE,
