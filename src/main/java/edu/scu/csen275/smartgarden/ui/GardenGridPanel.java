@@ -110,7 +110,6 @@ public class GardenGridPanel extends VBox {
      */
     private void setupPanel() {
         this.setSpacing(15);
-        this.setPadding(new Insets(15));
         this.setAlignment(Pos.CENTER);
         this.getStyleClass().add("garden-panel");
         // Make panel background transparent so animated background shows through
@@ -289,7 +288,6 @@ public class GardenGridPanel extends VBox {
     private void setupGrid() {
         gardenGrid.setHgap(3);
         gardenGrid.setVgap(3);
-        gardenGrid.setPadding(new Insets(10));
         gardenGrid.getStyleClass().add("garden-grid");
         gardenGrid.setAlignment(Pos.CENTER);
         
