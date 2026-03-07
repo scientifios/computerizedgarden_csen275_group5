@@ -239,8 +239,8 @@ public class GardenSimulationAPI {
         List<String> plantNames = new ArrayList<>();
         List<Integer> waterRequirements = new ArrayList<>();
         List<List<String>> parasiteList = new ArrayList<>();
-        
-        for (Plant plant : garden.getAllPlants()) {
+        // change from get all plants to get all living plants
+        for (Plant plant : garden.getLivingPlants()) {
             String plantType = plant.getPlantType();
             plantNames.add(plantType);
             waterRequirements.add(plant.getWaterRequirement()); // Fixed: return requirement, not current level
@@ -605,4 +605,3 @@ public class GardenSimulationAPI {
         };
     }
 }
-
