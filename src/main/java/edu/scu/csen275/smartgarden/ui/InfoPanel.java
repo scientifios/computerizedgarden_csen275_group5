@@ -6,7 +6,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
 
 /**
- * Modern info panel with card-based layout.
+ * Side panel that displays simulation status and resource levels.
  */
 public class InfoPanel extends VBox {
     private final InfoCard simulationCard;
@@ -26,7 +26,6 @@ public class InfoPanel extends VBox {
         this.setMinWidth(320);
         this.getStyleClass().add("info-panel");
 
-        // Simulation Info Card
         simulationCard = new InfoCard("Simulation Info");
         timeLabel = simulationCard.addLabel("Time: --", false);
         statsLabel = simulationCard.addLabel("Plants: 0", false);
@@ -35,27 +34,24 @@ public class InfoPanel extends VBox {
         weatherDisplay = new WeatherDisplay();
         simulationCard.getChildren().add(weatherDisplay);
 
-        // Resources Card
         resourcesCard = new InfoCard("Resources");
         resourcesCard.setTitleColor("#1E88E5");
         waterBar = resourcesCard.addProgressBar("Water Supply", 1.0);
         pesticideBar = resourcesCard.addProgressBar("Pesticide Stock", 1.0);
 
-        // Add all cards
         this.getChildren().addAll(simulationCard, resourcesCard);
     }
 
     /**
-     * Updates progress bars with animation.
+     * Updates the resource progress bars to the given values.
      */
     public void updateProgressBars(double waterProgress, double pesticideProgress) {
         animateProgressBar(waterBar, waterProgress);
         animateProgressBar(pesticideBar, pesticideProgress);
-        // Keep resource bars consistently blue (no low/critical recolor).
     }
 
     /**
-     * Animates progress bar to new value smoothly.
+     * Transitions a progress bar to the target value.
      */
     private void animateProgressBar(ProgressBar bar, double targetValue) {
         javafx.animation.Timeline timeline = new javafx.animation.Timeline(
@@ -67,7 +63,6 @@ public class InfoPanel extends VBox {
         timeline.play();
     }
 
-    // Getters
     public Label getTimeLabel() { return timeLabel; }
     public Label getStatsLabel() { return statsLabel; }
     public Label getHeatingStatusLabel() { return heatingStatusLabel; }

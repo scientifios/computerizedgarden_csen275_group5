@@ -13,8 +13,8 @@ import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
 
 /**
- * Gardenscapes-inspired top bar with coins, stars, boosters, and progress.
- * Bright, cheerful UI with playful fonts and animations.
+ * Top status bar showing resource counts and overall garden progress.
+ * Provides lightweight visual feedback when values change.
  */
 public class GardenscapesTopBar extends HBox {
     private Label coinsLabel;
@@ -37,31 +37,25 @@ public class GardenscapesTopBar extends HBox {
             "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 3);"
         );
         
-        // Title/Logo
         Label title = new Label("Smart Garden");
         title.setFont(Font.font("Comic Sans MS", FontWeight.BOLD, 24));
         title.setTextFill(Color.rgb(46, 125, 50));
         title.setEffect(new DropShadow(3, Color.rgb(0, 0, 0, 0.2)));
         
-        // Separator
         javafx.scene.control.Separator sep = new javafx.scene.control.Separator();
         sep.setOrientation(javafx.geometry.Orientation.VERTICAL);
         sep.setPrefHeight(40);
         sep.setStyle("-fx-background-color: rgba(0,0,0,0.1);");
         
-        // Coins display
         HBox coinsBox = createResourceBox("💰", "Coins", coins);
         coinsLabel = (Label) coinsBox.getChildren().get(1);
         
-        // Stars display
         HBox starsBox = createResourceBox("⭐", "Stars", stars);
         starsLabel = (Label) starsBox.getChildren().get(1);
         
-        // Boosters display
         HBox boostersBox = createResourceBox("🚀", "Boosters", boosters);
         boostersLabel = (Label) boostersBox.getChildren().get(1);
         
-        // Progress bar
         progressLabel = new Label("📊 Garden Progress: 0%");
         progressLabel.setFont(Font.font("Comic Sans MS", FontWeight.BOLD, 16));
         progressLabel.setTextFill(Color.rgb(156, 39, 176));
@@ -74,7 +68,6 @@ public class GardenscapesTopBar extends HBox {
             "-fx-border-radius: 15;"
         );
         
-        // Add everything
         this.getChildren().addAll(
             title, sep,
             coinsBox, starsBox, boostersBox,
@@ -83,7 +76,7 @@ public class GardenscapesTopBar extends HBox {
     }
     
     /**
-     * Creates a resource display box with icon and value.
+     * Builds a compact resource badge containing an icon and a formatted value label.
      */
     private HBox createResourceBox(String icon, String label, int value) {
         HBox box = new HBox(8);
@@ -105,7 +98,6 @@ public class GardenscapesTopBar extends HBox {
         valueLabel.setFont(Font.font("Comic Sans MS", FontWeight.BOLD, 16));
         valueLabel.setTextFill(Color.rgb(139, 69, 19));
         
-        // Add glow effect on hover
         box.setOnMouseEntered(e -> {
             box.setStyle(
                 "-fx-background-color: linear-gradient(to bottom, #FFFDE7 0%, #FFF9C4 100%); " +
@@ -135,7 +127,7 @@ public class GardenscapesTopBar extends HBox {
     }
     
     /**
-     * Updates coins with bounce animation.
+     * Updates the coin count label if the value changed.
      */
     public void updateCoins(int newCoins) {
         if (newCoins != coins) {
@@ -146,7 +138,7 @@ public class GardenscapesTopBar extends HBox {
     }
     
     /**
-     * Updates stars with bounce animation.
+     * Updates the star count label if the value changed.
      */
     public void updateStars(int newStars) {
         if (newStars != stars) {
@@ -157,7 +149,7 @@ public class GardenscapesTopBar extends HBox {
     }
     
     /**
-     * Updates boosters with bounce animation.
+     * Updates the booster count label if the value changed.
      */
     public void updateBoosters(int newBoosters) {
         if (newBoosters != boosters) {
@@ -168,14 +160,13 @@ public class GardenscapesTopBar extends HBox {
     }
     
     /**
-     * Updates progress percentage.
+     * Updates the progress label and adjusts its styling based on the percentage.
      */
     public void updateProgress(int percentage) {
         if (percentage != progress) {
             progress = percentage;
             progressLabel.setText("📊 Garden Progress: " + percentage + "%");
             
-            // Color code progress
             if (percentage < 25) {
                 progressLabel.setStyle(
                     "-fx-background-color: linear-gradient(to right, #FFCDD2 0%, #EF9A9A 100%); " +
@@ -215,7 +206,7 @@ public class GardenscapesTopBar extends HBox {
     }
     
     /**
-     * Bounce animation for value updates.
+     * Plays a short emphasis animation on the given label.
      */
     private void animateUpdate(Label label) {
         ScaleTransition scale = new ScaleTransition(Duration.millis(200), label);
@@ -229,7 +220,6 @@ public class GardenscapesTopBar extends HBox {
         scale.play();
     }
     
-    // Getters
     public int getCoins() { return coins; }
     public int getStars() { return stars; }
     public int getBoosters() { return boosters; }

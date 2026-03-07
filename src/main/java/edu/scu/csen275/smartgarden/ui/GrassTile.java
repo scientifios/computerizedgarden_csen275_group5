@@ -8,8 +8,8 @@ import javafx.scene.layout.StackPane;
 import java.util.Random;
 
 /**
- * Static grass tile with fixed color.
- * No grass canvas drawing or grass animations.
+ * UI tile used as the default background for an empty garden cell.
+ * Optionally displays a small flower marker.
  */
 public class GrassTile extends StackPane {
     private final StackPane baseTile;
@@ -42,7 +42,7 @@ public class GrassTile extends StackPane {
     }
 
     /**
-     * Fixed static grass color style.
+     * Returns the base CSS style for the grass tile.
      */
     private String getGrassTileStyle() {
         return "-fx-background-color: #8D6E63; " +
@@ -53,7 +53,7 @@ public class GrassTile extends StackPane {
     }
 
     /**
-     * Safely applies an effect to a node, deferring if not in scene.
+     * Applies an effect once the node is attached to a scene and has valid bounds.
      */
     private void safeSetEffect(javafx.scene.Node node, javafx.scene.effect.Effect effect) {
         if (node.getScene() != null && node.getBoundsInLocal().getWidth() > 0 && node.getBoundsInLocal().getHeight() > 0) {
@@ -82,7 +82,7 @@ public class GrassTile extends StackPane {
     }
 
     /**
-     * Kept for compatibility with existing calls.
+     * Displays a flower marker on the tile (if not already shown).
      */
     public void bloomFlower() {
         if (!hasFlower) {
@@ -102,10 +102,9 @@ public class GrassTile extends StackPane {
     }
 
     /**
-     * No-op: grass particle animation removed.
+     * Optional visual effect hook (unused in the current UI mode).
      */
     public void floatPetals() {
-        // Intentionally empty.
     }
 
     public boolean hasFlower() {
@@ -113,9 +112,8 @@ public class GrassTile extends StackPane {
     }
 
     /**
-     * No-op: animation system removed.
+     * Stops any tile-specific effects (no-op for this implementation).
      */
     public void stop() {
-        // Intentionally empty.
     }
 }

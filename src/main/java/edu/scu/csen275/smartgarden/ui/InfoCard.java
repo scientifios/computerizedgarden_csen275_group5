@@ -7,7 +7,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
 
 /**
- * Styled card component for information display.
+ * Container used to group related UI elements with a title.
  */
 public class InfoCard extends VBox {
     private final Label titleLabel;
@@ -24,14 +24,14 @@ public class InfoCard extends VBox {
     }
 
     /**
-     * Sets title color for this card.
+     * Updates the text color of the title label.
      */
     public void setTitleColor(String colorHex) {
         titleLabel.setStyle("-fx-text-fill: " + colorHex + ";");
     }
     
     /**
-     * Adds a labeled progress bar to the card.
+     * Creates a labeled progress bar and attaches it to the card layout.
      */
     public ProgressBar addProgressBar(String label, double initialValue) {
         Label barLabel = new Label(label);
@@ -48,7 +48,7 @@ public class InfoCard extends VBox {
     }
     
     /**
-     * Adds a text label to the card.
+     * Creates a text label and adds it to the card content.
      */
     public Label addLabel(String text, boolean bold) {
         Label label = new Label(text);
@@ -62,7 +62,7 @@ public class InfoCard extends VBox {
     }
     
     /**
-     * Updates progress bar color based on value.
+     * Adjusts the style classes of the progress bar according to its value.
      */
     public static void updateProgressBarStyle(ProgressBar bar, double value) {
         bar.getStyleClass().removeAll("low", "critical");

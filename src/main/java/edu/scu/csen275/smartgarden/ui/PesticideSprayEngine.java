@@ -13,20 +13,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Creates spray mist animation when pesticide is applied to a tile.
- * Shows expanding white/blue fog, pest death animations, and healing glow.
+ * Handles the visual effect sequence used when pesticide is applied to a tile.
+ * Includes mist rendering, pest removal timing, and a short recovery highlight.
  */
 public class PesticideSprayEngine {
     
     /**
-     * Animates pesticide spray on a tile with all effects.
+     * Runs the pesticide effect sequence for the given tile and related UI elements.
      */
     public static void animateSpray(StackPane tile, List<PestSprite> pests, 
                                    Pane particleContainer, double centerX, double centerY) {
         double tileWidth = 60;
         double tileHeight = 60;
         
-        // Check if mist canvas already exists (prevent multiple animations)
         Canvas existingMist = null;
         for (var child : tile.getChildren()) {
             if (child instanceof Canvas && child.getUserData() != null && child.getUserData().equals("mist")) {
@@ -35,81 +34,68 @@ public class PesticideSprayEngine {
             }
         }
         if (existingMist != null) {
-            return; // Already animating, skip
+            return;
         }
         
-        // Create spray mist canvas overlay
         Canvas mistCanvas = new Canvas(tileWidth, tileHeight);
-        mistCanvas.setUserData("mist"); // Mark as mist canvas
+        mistCanvas.setUserData("mist");
         GraphicsContext gc = mistCanvas.getGraphicsContext2D();
         mistCanvas.setMouseTransparent(true);
         
-        // Add mist canvas to tile temporarily (bring to front)
         tile.getChildren().add(mistCanvas);
         mistCanvas.toFront();
         
-        // List of active mist particles - centered in tile
-        // Create more particles for denser, continuous mist effect
         List<MistParticle> mistParticles = new ArrayList<>();
         double tileCenterX = tileWidth / 2;
         double tileCenterY = tileHeight / 2;
-        for (int i = 0; i < 40; i++) { // More particles for continuous spray effect
+        for (int i = 0; i < 40; i++) {
             MistParticle p = new MistParticle();
-            p.x = tileCenterX + (Math.random() - 0.5) * 8; // Tighter initial spread
+            p.x = tileCenterX + (Math.random() - 0.5) * 8;
             p.y = tileCenterY + (Math.random() - 0.5) * 8;
-            p.radius = 1.5 + Math.random() * 2.5; // Smaller initial size - grows over time
-            p.vx = (Math.random() - 0.5) * 2.5; // Slower initial velocity for continuous spray
+            p.radius = 1.5 + Math.random() * 2.5;
+            p.vx = (Math.random() - 0.5) * 2.5;
             p.vy = (Math.random() - 0.5) * 2.5;
-            p.alpha = 0.95; // High initial opacity - fades slowly
+            p.alpha = 0.95;
             mistParticles.add(p);
         }
         
-        // Animate continuous spray mist - longer duration for realistic spray effect
         Timeline mistAnimation = new Timeline(
             new KeyFrame(Duration.millis(16), e -> {
                 gc.clearRect(0, 0, tileWidth, tileHeight);
                 
-                // Update and draw mist particles
                 for (MistParticle p : mistParticles) {
                     p.x += p.vx;
                     p.y += p.vy;
-                    p.radius += 0.15; // Much slower expansion for continuous spray
-                    p.alpha *= 0.995; // Much slower fade - maintains visibility longer
-                    p.vx *= 0.998; // Very slow velocity decay - particles move longer
+                    p.radius += 0.15;
+                    p.alpha *= 0.995;
+                    p.vx *= 0.998;
                     p.vy *= 0.998;
                     
-                    // Draw mist particle - white/light gray mist spray effect
-                    // Use white with slight transparency for realistic mist
-                    gc.setFill(Color.color(1.0, 1.0, 1.0, p.alpha * 0.9)); // Pure white mist
+                    gc.setFill(Color.color(1.0, 1.0, 1.0, p.alpha * 0.9));
                     gc.fillOval(p.x - p.radius, p.y - p.radius, p.radius * 2, p.radius * 2);
                     
-                    // Add slight gray outer edge for depth
-                    gc.setFill(Color.color(0.85, 0.85, 0.85, p.alpha * 0.4)); // Light gray edge
+                    gc.setFill(Color.color(0.85, 0.85, 0.85, p.alpha * 0.4));
                     gc.fillOval(p.x - p.radius * 1.1, p.y - p.radius * 1.1, p.radius * 2.2, p.radius * 2.2);
                 }
             })
         );
-        mistAnimation.setCycleCount(400); // ~6.4 seconds at 16ms per frame - MUCH LONGER for continuous spray
+        mistAnimation.setCycleCount(400);
         mistAnimation.setOnFinished(e -> {
             tile.getChildren().remove(mistCanvas);
         });
         mistAnimation.play();
         
-        // Animate pest death (shrink animation)
         for (PestSprite pest : new ArrayList<>(pests)) {
-            // Delay each pest death slightly for staggered effect
             javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(
-                Duration.millis(200 + (int)(Math.random() * 300)) // 200-500ms delay
+                Duration.millis(200 + (int)(Math.random() * 300))
             );
             delay.setOnFinished(e -> {
                 pest.animateDeath(() -> {
-                    // Pest death animation completed
                 });
             });
             delay.play();
         }
         
-        // Show "Plant Saved!" text - FIXED: Use correct coordinates and ensure visibility
         if (particleContainer != null) {
             javafx.geometry.Bounds tileBounds = tile.localToScene(tile.getBoundsInLocal());
             javafx.geometry.Bounds containerBounds = particleContainer.sceneToLocal(tileBounds);
@@ -123,19 +109,15 @@ public class PesticideSprayEngine {
             System.err.println("[PesticideSprayEngine] WARNING: particleContainer is null - cannot show 'Plant Saved!' message");
         }
         
-        // Subtle white glow on tile after mist clears (no rainbow effect)
-        // Use simple glow without ColorAdjust to avoid rainbow colors
-        // Delay glow to appear after mist starts fading (around 5 seconds)
-        PauseTransition glowDelay = new PauseTransition(Duration.millis(5000)); // Wait 5 seconds
+        PauseTransition glowDelay = new PauseTransition(Duration.millis(5000));
         glowDelay.setOnFinished(e -> {
-            // Only apply effect if tile is in scene and has valid bounds
             if (tile.getScene() != null && tile.getBoundsInLocal().getWidth() > 0 && tile.getBoundsInLocal().getHeight() > 0) {
-                Glow healGlow = new Glow(0.3); // Subtle white glow (no color tint)
+                Glow healGlow = new Glow(0.3);
                 tile.setEffect(healGlow);
                 
-                FadeTransition glowFade = new FadeTransition(Duration.millis(1500), tile); // 1.5 seconds
+                FadeTransition glowFade = new FadeTransition(Duration.millis(1500), tile);
                 glowFade.setFromValue(1.0);
-                glowFade.setToValue(1.0); // Don't fade, just remove effect
+                glowFade.setToValue(1.0);
                 glowFade.setOnFinished(e2 -> {
                     tile.setEffect(null);
                 });
@@ -145,9 +127,6 @@ public class PesticideSprayEngine {
         glowDelay.play();
     }
     
-    /**
-     * Helper class for mist particles.
-     */
     private static class MistParticle {
         double x, y, radius, vx, vy, alpha;
     }

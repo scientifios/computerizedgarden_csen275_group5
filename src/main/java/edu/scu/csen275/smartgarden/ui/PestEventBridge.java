@@ -4,14 +4,14 @@ import edu.scu.csen275.smartgarden.model.Position;
 import javafx.application.Platform;
 
 /**
- * Bridge class to connect PestControlSystem events to UI animations.
- * Acts as an observer/listener interface for pest-related events.
+ * Dispatches pest-related events to a UI animation handler.
+ * Ensures callbacks are executed on the JavaFX UI thread.
  */
 public class PestEventBridge {
     private PestAnimationHandler handler;
     
     /**
-     * Interface for handling pest animation events.
+     * Callback interface used by the UI layer to react to pest events.
      */
     public interface PestAnimationHandler {
         void onPestSpawned(Position position, String pestType, boolean isHarmful);
@@ -21,14 +21,14 @@ public class PestEventBridge {
     }
     
     /**
-     * Sets the animation handler.
+     * Registers the UI handler that will receive pest event callbacks.
      */
     public void setHandler(PestAnimationHandler handler) {
         this.handler = handler;
     }
     
     /**
-     * Notifies that a pest has spawned.
+     * Dispatches a pest spawn event to the UI handler.
      */
     public void notifyPestSpawned(Position position, String pestType, boolean isHarmful) {
         if (handler != null) {
@@ -37,7 +37,7 @@ public class PestEventBridge {
     }
     
     /**
-     * Notifies that a pest has attacked.
+     * Dispatches a pest attack event.
      */
     public void notifyPestAttack(Position position, int damage) {
         if (handler != null) {
@@ -46,7 +46,7 @@ public class PestEventBridge {
     }
     
     /**
-     * Notifies that pesticide has been applied.
+     * Dispatches a pesticide application event.
      */
     public void notifyPesticideApplied(Position position) {
         if (handler != null) {
@@ -55,7 +55,7 @@ public class PestEventBridge {
     }
     
     /**
-     * Notifies that a pest has been removed.
+     * Dispatches a pest removal event.
      */
     public void notifyPestRemoved(Position position, String pestType) {
         if (handler != null) {

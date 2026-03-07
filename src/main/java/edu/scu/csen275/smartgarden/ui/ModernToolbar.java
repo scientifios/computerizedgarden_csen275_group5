@@ -6,7 +6,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 
 /**
- * Modern toolbar with icons and animations.
+ * Toolbar for simulation controls and status display.
  */
 public class ModernToolbar extends HBox {
     private final Label statusLabel;
@@ -21,23 +21,19 @@ public class ModernToolbar extends HBox {
         this.setAlignment(Pos.CENTER_LEFT);
         this.getStyleClass().add("toolbar");
         
-        // Title with icon (simplified - no duplicate text)
         Label title = new Label("Smart Garden");
         title.getStyleClass().add("title-label");
         
-        // Separator
         Separator sep1 = new Separator();
         sep1.setOrientation(javafx.geometry.Orientation.VERTICAL);
         sep1.setPrefHeight(30);
         
-        // Control buttons
         startBtn = createIconButton("Start", "button-start");
         pauseBtn = createIconButton("Pause", "button-pause");
         stopBtn = createIconButton("Stop", "button-stop");
         
         pauseBtn.setDisable(true);
         
-        // Speed selector
         Label speedLabel = new Label("Speed:");
         speedLabel.getStyleClass().add("toolbar-label");
         
@@ -46,7 +42,6 @@ public class ModernToolbar extends HBox {
         speedBox.setValue("1x");
         speedBox.getStyleClass().add("modern-combo");
         
-        // Status label
         Separator sep2 = new Separator();
         sep2.setOrientation(javafx.geometry.Orientation.VERTICAL);
         sep2.setPrefHeight(30);
@@ -63,7 +58,7 @@ public class ModernToolbar extends HBox {
     }
     
     /**
-     * Creates a button with icon and modern styling.
+     * Creates a toolbar button with the given text and style class.
      */
     private Button createIconButton(String text, String styleClass) {
         Button btn = new Button(text);
@@ -73,15 +68,13 @@ public class ModernToolbar extends HBox {
     }
     
     /**
-     * Updates status label with glow effect for running state.
+     * Updates the status text and applies the matching status style class.
      */
     public void updateStatus(String status) {
         statusLabel.setText("Status: " + status);
         
-        // Remove old status classes
         statusLabel.getStyleClass().removeAll("status-running", "status-stopped", "status-paused");
         
-        // Add appropriate status class
         if (status.equals("RUNNING")) {
             statusLabel.getStyleClass().add("status-running");
         } else if (status.equals("PAUSED")) {
@@ -91,7 +84,6 @@ public class ModernToolbar extends HBox {
         }
     }
     
-    // Getters for buttons and combo box
     public Button getStartButton() { return startBtn; }
     public Button getPauseButton() { return pauseBtn; }
     public Button getStopButton() { return stopBtn; }

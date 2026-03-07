@@ -20,8 +20,8 @@ import javafx.scene.control.Label;
 import javafx.util.Duration;
 
 /**
- * Tile component for garden grid cells.
- * Pest and watering visuals are represented by static status icons.
+ * UI element representing a single cell in the garden grid.
+ * Displays the plant image and small indicators for pest and water status.
  */
 public class AnimatedTile extends StackPane {
     private final ImageView plantImageView;
@@ -254,11 +254,9 @@ public class AnimatedTile extends StackPane {
     }
 
     public void animateWatering() {
-        // Disabled by requirement.
     }
 
     public void startWateringAnimation() {
-        // Disabled by requirement.
         isWatering = false;
     }
 
@@ -267,7 +265,6 @@ public class AnimatedTile extends StackPane {
     }
 
     public void animatePesticide() {
-        // Disabled by requirement.
     }
 
     private String getPlantImagePath(Plant plant) {
@@ -416,7 +413,6 @@ public class AnimatedTile extends StackPane {
     }
 
     public void showDamageVisual(int damage) {
-        // Disabled by requirement.
     }
 
     public void applyPesticide() {
@@ -445,7 +441,7 @@ public class AnimatedTile extends StackPane {
     }
 
     /**
-     * Forces the water indicator to be shown briefly for UI feedback.
+     * Temporarily shows the water indicator to highlight low water status.
      */
     public void showTemporaryWaterHint() {
         waterHintUntilMs = System.currentTimeMillis() + WATER_HINT_DURATION_MS;

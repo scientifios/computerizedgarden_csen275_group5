@@ -6,8 +6,8 @@ import javafx.scene.effect.Glow;
 import javafx.util.Duration;
 
 /**
- * Enhanced button with bounce and glow effects.
- * Gardenscapes-style playful button interactions.
+ * Button with simple hover and press animations.
+ * Provides lightweight visual feedback for interactions.
  */
 public class BounceButton extends Button {
     
@@ -17,10 +17,9 @@ public class BounceButton extends Button {
     }
     
     /**
-     * Sets up button with bounce and glow effects.
+     * Initializes styles and mouse interaction handlers.
      */
     private void setupButton() {
-        // Initial style
         this.setStyle(
             "-fx-background-color: linear-gradient(to bottom, #81C784 0%, #66BB6A 100%); " +
             "-fx-text-fill: white; " +
@@ -33,9 +32,7 @@ public class BounceButton extends Button {
             "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);"
         );
         
-        // Hover effect with bounce
         this.setOnMouseEntered(e -> {
-            // Glow effect
             this.setEffect(new Glow(0.5));
             this.setStyle(
                 "-fx-background-color: linear-gradient(to bottom, #A5D6A7 0%, #81C784 100%); " +
@@ -49,7 +46,6 @@ public class BounceButton extends Button {
                 "-fx-effect: dropshadow(gaussian, rgba(76,175,80,0.5), 8, 0.8, 0, 0);"
             );
             
-            // Bounce up
             TranslateTransition bounce = new TranslateTransition(Duration.millis(150), this);
             bounce.setFromY(0);
             bounce.setToY(-3);
@@ -59,7 +55,6 @@ public class BounceButton extends Button {
             bounce.play();
         });
         
-        // Exit hover
         this.setOnMouseExited(e -> {
             this.setEffect(null);
             this.setStyle(
@@ -80,7 +75,6 @@ public class BounceButton extends Button {
             returnTo.play();
         });
         
-        // Click effect - bigger bounce
         this.setOnMousePressed(e -> {
             ScaleTransition press = new ScaleTransition(Duration.millis(100), this);
             press.setFromX(1.0);
@@ -102,7 +96,7 @@ public class BounceButton extends Button {
     }
     
     /**
-     * Triggers a success bounce animation.
+     * Plays a short acknowledgement animation.
      */
     public void animateSuccess() {
         ScaleTransition success = new ScaleTransition(Duration.millis(200), this);
