@@ -14,6 +14,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Panel containing the interactive garden grid with animated tiles.
@@ -26,6 +27,8 @@ public class GardenGridPanel extends VBox {
     private ComboBox<PlantType> plantSelector;
     private Pane animationContainer; // Container for watering animations
     private Pane coinFloatPane; // Pane for coin float animations
+    private Position selectedPlantPosition;
+    private Consumer<Position> plantSelectionHandler;
     private static final int GRID_SIZE = 9;
     
     /**
@@ -40,6 +43,10 @@ public class GardenGridPanel extends VBox {
      */
     public void setCoinFloatPane(Pane pane) {
         this.coinFloatPane = pane;
+    }
+
+    public void setPlantSelectionHandler(Consumer<Position> plantSelectionHandler) {
+        this.plantSelectionHandler = plantSelectionHandler;
     }
     
     /**
@@ -371,6 +378,7 @@ public class GardenGridPanel extends VBox {
         tile.setOnMouseClicked(e -> {
             Plant existing = controller.getGarden().getPlant(position);
             if (existing != null) {
+                selectPlant(position);
                 showPlantTooltip(tile, existing);
             }
         });
@@ -488,6 +496,7 @@ public class GardenGridPanel extends VBox {
                 grassTiles[row][col].removeFlower();
                 tiles[row][col].setVisible(true);
                 tiles[row][col].update(plant);
+                tiles[row][col].setSelected(position.equals(selectedPlantPosition));
             }
         }
     }
@@ -662,5 +671,23 @@ public class GardenGridPanel extends VBox {
             return tiles[row][col];
         }
         return null;
+    }
+
+    public void setSelectedPlant(Position position) {
+        selectedPlantPosition = position;
+        for (int row = 0; row < GRID_SIZE; row++) {
+            for (int col = 0; col < GRID_SIZE; col++) {
+                if (tiles[row][col] != null) {
+                    tiles[row][col].setSelected(position != null && position.row() == row && position.column() == col);
+                }
+            }
+        }
+    }
+
+    private void selectPlant(Position position) {
+        setSelectedPlant(position);
+        if (plantSelectionHandler != null) {
+            plantSelectionHandler.accept(position);
+        }
     }
 }
