@@ -43,6 +43,7 @@ public class AnimatedTile extends StackPane {
     private Pane animationContainer;
     private long waterHintUntilMs;
     private static final long WATER_HINT_DURATION_MS = 500;
+    private boolean selected;
 
     private static final String[] PASTEL_COLORS = {
         "#E4F6D4",
@@ -180,6 +181,9 @@ public class AnimatedTile extends StackPane {
         hasPest = false;
         isWatering = false;
         waterHintUntilMs = 0;
+        selected = false;
+        this.setScaleX(1.0);
+        this.setScaleY(1.0);
     }
 
     private void setPlant(Plant plant) {
@@ -219,7 +223,7 @@ public class AnimatedTile extends StackPane {
         String healthColor = plant.getHealthColor();
         baseTile.setStyle(getPastelPlantStyle(healthColor));
         baseTile.setOpacity(1.0);
-        safeSetEffect(baseTile, createSoftShadow());
+        refreshTileEffect();
         currentStyle = healthColor.toLowerCase();
     }
 
@@ -234,6 +238,7 @@ public class AnimatedTile extends StackPane {
         fadeAnimation.play();
         currentStyle = "dead";
         hasPest = false;
+        refreshTileEffect();
     }
 
     private void updateStatusIcons() {
@@ -391,12 +396,12 @@ public class AnimatedTile extends StackPane {
 
     public void applyHoverEffect() {
         if (!"dead".equals(currentStyle)) {
-            safeSetEffect(baseTile, new Glow(0.3));
+            safeSetEffect(baseTile, selected ? createSelectedGlow() : new Glow(0.3));
         }
     }
 
     public void removeHoverEffect() {
-        safeSetEffect(baseTile, createSoftShadow());
+        refreshTileEffect();
     }
 
     public void setTileIndex(int index) {
@@ -450,5 +455,26 @@ public class AnimatedTile extends StackPane {
     public void showTemporaryWaterHint() {
         waterHintUntilMs = System.currentTimeMillis() + WATER_HINT_DURATION_MS;
         updateStatusIcons();
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
+        this.setScaleX(selected ? 1.08 : 1.0);
+        this.setScaleY(selected ? 1.08 : 1.0);
+        refreshTileEffect();
+    }
+
+    private void refreshTileEffect() {
+        safeSetEffect(baseTile, selected ? createSelectedGlow() : createSoftShadow());
+    }
+
+    private Effect createSelectedGlow() {
+        DropShadow selectedGlow = new DropShadow();
+        selectedGlow.setOffsetX(0);
+        selectedGlow.setOffsetY(0);
+        selectedGlow.setRadius(14);
+        selectedGlow.setColor(javafx.scene.paint.Color.rgb(255, 193, 7, 0.85));
+        selectedGlow.setBlurType(BlurType.GAUSSIAN);
+        return selectedGlow;
     }
 }

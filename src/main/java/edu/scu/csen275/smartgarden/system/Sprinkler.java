@@ -13,6 +13,7 @@ public class Sprinkler {
     private final int flowRate; // liters per minute
     private boolean isActive;
     private LocalDateTime lastActivation;
+    private int activationCount;
     
     private static final Logger logger = Logger.getInstance();
     private static final int DEFAULT_FLOW_RATE = 5; // liters per minute per plant
@@ -32,6 +33,7 @@ public class Sprinkler {
         this.flowRate = flowRate;
         this.isActive = false;
         this.lastActivation = null;
+        this.activationCount = 0;
     }
     
     /**
@@ -41,6 +43,7 @@ public class Sprinkler {
         if (!isActive) {
             isActive = true;
             lastActivation = LocalDateTime.now();
+            activationCount++;
             logger.info("Watering", "Sprinkler activated for Zone " + zone.getZoneId());
         }
     }
@@ -94,12 +97,16 @@ public class Sprinkler {
     public LocalDateTime getLastActivation() {
         return lastActivation;
     }
+
+    public int getActivationCount() {
+        return activationCount;
+    }
     
     @Override
     public String toString() {
         return "Sprinkler[Zone " + zone.getZoneId() + 
                ", Active: " + isActive + 
+               ", Activations: " + activationCount +
                ", Flow: " + flowRate + "L/min]";
     }
 }
-
