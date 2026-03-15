@@ -8,10 +8,31 @@
       }
     },
     {
+      "type": "Strawberry",
+      "position": {
+        "row": 1,
+        "column": 2
+      }
+    },
+    {
+      "type": "Strawberry",
+      "position": {
+        "row": 1,
+        "column": 3
+      }
+    },   
+    {
       "type": "Carrot",
       "position": {
         "row": 2,
         "column": 2
+      }
+    },
+    {
+      "type": "Carrot",
+      "position": {
+        "row": 2,
+        "column": 4
       }
     },
     {
@@ -22,10 +43,38 @@
       }
     },
     {
+      "type": "Tomato",
+      "position": {
+        "row": 3,
+        "column": 4
+      }
+    },
+    {
       "type": "Sunflower",
       "position": {
         "row": 4,
         "column": 4
+      }
+    },
+    {
+      "type": "Sunflower",
+      "position": {
+        "row": 4,
+        "column": 1
+      }
+    },
+    {
+      "type": "Sunflower",
+      "position": {
+        "row": 4,
+        "column": 2
+      }
+    },
+    {
+      "type": "Sunflower",
+      "position": {
+        "row": 4,
+        "column": 3
       }
     }
   ]

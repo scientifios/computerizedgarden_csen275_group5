@@ -182,10 +182,10 @@ public class GardenSimulationAPI {
             if (configStream == null) {
                 logger.warning("API", "Config file not found, using default plants");
                 // Fallback to default plants if config not found
-                addPlant(PlantType.STRAWBERRY, new Position(1, 1));
-                addPlant(PlantType.CARROT, new Position(2, 2));
-                addPlant(PlantType.TOMATO, new Position(3, 3));
-                addPlant(PlantType.SUNFLOWER, new Position(4, 4));
+                addPlants(PlantType.STRAWBERRY, new Position(1, 1));
+                addPlants(PlantType.CARROT, new Position(2, 2));
+                addPlants(PlantType.TOMATO, new Position(3, 3));
+                addPlants(PlantType.SUNFLOWER, new Position(4, 4));
             } else {
                 String configContent = new String(configStream.readAllBytes());
                 configStream.close();
@@ -194,10 +194,10 @@ public class GardenSimulationAPI {
         } catch (Exception e) {
             logger.error("API", "Error loading config file: " + e.getMessage());
             // Fallback to default plants
-            addPlant(PlantType.STRAWBERRY, new Position(1, 1));
-            addPlant(PlantType.CARROT, new Position(2, 2));
-            addPlant(PlantType.TOMATO, new Position(3, 3));
-            addPlant(PlantType.SUNFLOWER, new Position(4, 4));
+            addPlants(PlantType.STRAWBERRY, new Position(1, 1));
+            addPlants(PlantType.CARROT, new Position(2, 2));
+            addPlants(PlantType.TOMATO, new Position(3, 3));
+            addPlants(PlantType.SUNFLOWER, new Position(4, 4));
         }
         
         logger.info("API", "Garden initialized with " + garden.getTotalPlants() + " plants.");
@@ -218,7 +218,7 @@ public class GardenSimulationAPI {
     /**
      * Helper method to add a plant to the garden.
      */
-    private void addPlant(PlantType plantType, Position position) {
+    private void addPlants(PlantType plantType, Position position) {
         if (controller.plantSeed(plantType, position)) {
             logger.info("API", "Added plant: " + plantType.getDisplayName() + " at " + position);
         } else {
@@ -239,8 +239,8 @@ public class GardenSimulationAPI {
         List<String> plantNames = new ArrayList<>();
         List<Integer> waterRequirements = new ArrayList<>();
         List<List<String>> parasiteList = new ArrayList<>();
-        
-        for (Plant plant : garden.getAllPlants()) {
+        // change from get all plants to get all living plants
+        for (Plant plant : garden.getLivingPlants()) {
             String plantType = plant.getPlantType();
             plantNames.add(plantType);
             waterRequirements.add(plant.getWaterRequirement()); // Fixed: return requirement, not current level
@@ -568,7 +568,7 @@ public class GardenSimulationAPI {
             // Map plant type name to PlantType enum
             PlantType plantType = mapPlantTypeName(plantTypeName);
             if (plantType != null) {
-                addPlant(plantType, new Position(row, column));
+                addPlants(plantType, new Position(row, column));
                 plantCount++;
             } else {
                 logger.warning("API", "Unknown plant type in config: " + plantTypeName);
@@ -577,10 +577,10 @@ public class GardenSimulationAPI {
         
         if (plantCount == 0) {
             logger.warning("API", "No plants loaded from config, using defaults");
-            addPlant(PlantType.STRAWBERRY, new Position(1, 1));
-            addPlant(PlantType.CARROT, new Position(2, 2));
-            addPlant(PlantType.TOMATO, new Position(3, 3));
-            addPlant(PlantType.SUNFLOWER, new Position(4, 4));
+            addPlants(PlantType.STRAWBERRY, new Position(1, 1));
+            addPlants(PlantType.CARROT, new Position(2, 2));
+            addPlants(PlantType.TOMATO, new Position(3, 3));
+            addPlants(PlantType.SUNFLOWER, new Position(4, 4));
         }
     }
     
@@ -605,4 +605,3 @@ public class GardenSimulationAPI {
         };
     }
 }
-

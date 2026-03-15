@@ -39,7 +39,7 @@ public class HeadlessSimulationEngine {
     
     private static final Logger logger = Logger.getInstance();
     private static final int BASE_TICK_INTERVAL_MS = 1000; // 1 second real time = 1 minute sim time
-    private static final int TICKS_PER_SIM_DAY = 1440; // 1440 minutes in a day
+    private static final int TICKS_PER_SIM_DAY = 60; // 1440 minutes in a day
     
     // Track active instances for automatic cleanup
     private static final Set<HeadlessSimulationEngine> activeInstances = ConcurrentHashMap.newKeySet();
@@ -256,7 +256,8 @@ public class HeadlessSimulationEngine {
         int day = dayCounter.incrementAndGet();
         logger.info("Simulation", "Headless Day " + day + " complete. Living plants: " + 
                    garden.getLivingPlants().size() + "/" + garden.getTotalPlants());
-        
+        weatherSystem.apiAdvanceDay();
+        // weatherSystem.update();
         // Advance all plants by one day
         for (Plant plant : garden.getAllPlants()) {
             plant.advanceDay();
@@ -306,4 +307,3 @@ public class HeadlessSimulationEngine {
     public int getDayCounter() { return dayCounter.get(); }
     public LocalDateTime getSimulationTime() { return simulationTime; }
 }
-
