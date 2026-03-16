@@ -6,16 +6,16 @@ package edu.scu.csen275.smartgarden.model;
 public enum PlantType {
 
     STRAWBERRY("🍓", "Strawberry", PlantCategory.FRUIT),
-    GRAPEVINE("🍇", "Grapevine", PlantCategory.FRUIT),
-    APPLE("🍎", "Apple Sapling", PlantCategory.FRUIT),
+    CHERRY("🍇","Cherry", PlantCategory.FRUIT),
+    APPLE("🍎","Apple Sapling", PlantCategory.FRUIT),
     
-    CARROT("🥕", "Carrot", PlantCategory.VEGETABLE),
-    TOMATO("🍅", "Tomato", PlantCategory.VEGETABLE),
-    ONION("🧅", "Onion", PlantCategory.VEGETABLE),
+    CABBAGE("🥕", "Cabbage", PlantCategory.VEGETABLE),
+    TOMATO("🍅","Tomato", PlantCategory.VEGETABLE),
+    SCALLION("🧅", "Scallion", PlantCategory.VEGETABLE),
     
-    SUNFLOWER("🌻", "Sunflower", PlantCategory.FLOWER),
-    TULIP("🌸", "Tulip", PlantCategory.FLOWER),
-    ROSE("🌹", "Rose", PlantCategory.FLOWER);
+    DAISY("🌻","Daisy", PlantCategory.FLOWER),
+    LILY("🌸","Lily", PlantCategory.FLOWER),
+    PEONY("🌹","Peony", PlantCategory.FLOWER);
     
     private final String emoji;
     private final String displayName;
@@ -26,7 +26,7 @@ public enum PlantType {
         this.displayName = displayName;
         this.category = category;
     }
-    
+
     public String getEmoji() {
         return emoji;
     }
@@ -44,9 +44,9 @@ public enum PlantType {
     */
     public static String getCategoryHeader(PlantCategory category) {
         return switch (category) {
-            case FRUIT -> "🍓 Fruit Plants";
-            case VEGETABLE -> "🥕 Vegetable Crops";
-            case FLOWER -> "🌸 Flowers";
+            case FRUIT -> "Fruits";
+            case VEGETABLE -> "Vegetable";
+            case FLOWER -> "Flowers";
         };
     }
 }

@@ -137,18 +137,18 @@ public class GardenGridPanel extends VBox {
         
         // Fruits
         plantSelector.getItems().add(PlantType.STRAWBERRY);
-        plantSelector.getItems().add(PlantType.GRAPEVINE);
+        plantSelector.getItems().add(PlantType.CHERRY);
         plantSelector.getItems().add(PlantType.APPLE);
         
         // Vegetable
-        plantSelector.getItems().add(PlantType.CARROT);
+        plantSelector.getItems().add(PlantType.CABBAGE);
         plantSelector.getItems().add(PlantType.TOMATO);
-        plantSelector.getItems().add(PlantType.ONION);
+        plantSelector.getItems().add(PlantType.SCALLION);
         
         // Flowers
-        plantSelector.getItems().add(PlantType.SUNFLOWER);
-        plantSelector.getItems().add(PlantType.TULIP);
-        plantSelector.getItems().add(PlantType.ROSE);
+        plantSelector.getItems().add(PlantType.DAISY);
+        plantSelector.getItems().add(PlantType.LILY);
+        plantSelector.getItems().add(PlantType.PEONY);
         
         // Set default value
         plantSelector.setValue(PlantType.STRAWBERRY);

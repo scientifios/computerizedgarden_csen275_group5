@@ -98,17 +98,19 @@ private static void loadPestVulnerabilitiesFromConfig() {
     /**
      * Fallback method to load default pest vulnerabilities if config file fails.
      */
-    private static void loadDefaultPestVulnerabilities() {
-        pestVulnerabilities.put("Strawberry", Arrays.asList("Red Mite", "Green Leaf Worm"));
-        pestVulnerabilities.put("Grapevine", Arrays.asList("Black Beetle", "Red Mite"));
-        pestVulnerabilities.put("Apple Sapling", Arrays.asList("Brown Caterpillar", "Green Leaf Worm"));
-        pestVulnerabilities.put("Carrot", Arrays.asList("Red Mite", "Brown Caterpillar"));
-        pestVulnerabilities.put("Tomato", Arrays.asList("Black Beetle", "Red Mite"));
-        pestVulnerabilities.put("Onion", Arrays.asList("Green Leaf Worm"));
-        pestVulnerabilities.put("Sunflower", Arrays.asList("Red Mite", "Brown Caterpillar"));
-        pestVulnerabilities.put("Tulip", Arrays.asList("Green Leaf Worm"));
-        pestVulnerabilities.put("Rose", Arrays.asList("Black Beetle", "Red Mite"));
-    }
+private static void loadDefaultPestVulnerabilities() {
+    pestVulnerabilities.put("Strawberry", Arrays.asList("Red Mite", "Green Leaf Worm"));
+    pestVulnerabilities.put("Apple", Arrays.asList("Brown Caterpillar", "Green Leaf Worm"));
+    pestVulnerabilities.put("Cherry", Arrays.asList("Black Beetle", "Red Mite"));
+
+    pestVulnerabilities.put("Cabbage", Arrays.asList("Green Leaf Worm", "Brown Caterpillar"));
+    pestVulnerabilities.put("Scallion", Arrays.asList("Red Mite"));
+    pestVulnerabilities.put("Tomato", Arrays.asList("Black Beetle", "Red Mite"));
+
+    pestVulnerabilities.put("Daisy", Arrays.asList("Red Mite"));
+    pestVulnerabilities.put("Lily", Arrays.asList("Green Leaf Worm"));
+    pestVulnerabilities.put("Peony", Arrays.asList("Black Beetle"));
+}
     
     /**
      * Creates a new GardenSimulationAPI with default settings.
@@ -169,9 +171,9 @@ private static void loadPestVulnerabilitiesFromConfig() {
                 logger.warning("API", "Config file not found, using default plants");
                 // Fallback to default plants if config not found
                 addPlants(PlantType.STRAWBERRY, new Position(1, 1));
-                addPlants(PlantType.CARROT, new Position(2, 2));
+                addPlants(PlantType.CABBAGE, new Position(2, 2));
                 addPlants(PlantType.TOMATO, new Position(3, 3));
-                addPlants(PlantType.SUNFLOWER, new Position(4, 4));
+                addPlants(PlantType.LILY, new Position(4, 4));
             } else {
                 String configContent = new String(configStream.readAllBytes());
                 configStream.close();
@@ -181,9 +183,9 @@ private static void loadPestVulnerabilitiesFromConfig() {
             logger.error("API", "Error loading config file: " + e.getMessage());
             // Fallback to default plants
             addPlants(PlantType.STRAWBERRY, new Position(1, 1));
-            addPlants(PlantType.CARROT, new Position(2, 2));
+            addPlants(PlantType.CABBAGE, new Position(2, 2));
             addPlants(PlantType.TOMATO, new Position(3, 3));
-            addPlants(PlantType.SUNFLOWER, new Position(4, 4));
+            addPlants(PlantType.LILY, new Position(4, 4));
         }
         
         logger.info("API", "Garden initialized with " + garden.getTotalPlants() + " plants.");
@@ -521,9 +523,9 @@ private static void loadPestVulnerabilitiesFromConfig() {
         if (plantCount == 0) {
             logger.warning("API", "No plants loaded from config, using defaults");
             addPlants(PlantType.STRAWBERRY, new Position(1, 1));
-            addPlants(PlantType.CARROT, new Position(2, 2));
+            addPlants(PlantType.CABBAGE, new Position(2, 2));
             addPlants(PlantType.TOMATO, new Position(3, 3));
-            addPlants(PlantType.SUNFLOWER, new Position(4, 4));
+            addPlants(PlantType.LILY, new Position(4, 4));
         }
     }
     
@@ -536,14 +538,14 @@ private static void loadPestVulnerabilitiesFromConfig() {
     private PlantType mapPlantTypeName(String plantTypeName) {
         return switch (plantTypeName) {
             case "Strawberry" -> PlantType.STRAWBERRY;
-            case "Grapevine" -> PlantType.GRAPEVINE;
+            case "Cherry" -> PlantType.CHERRY;
             case "Apple Sapling", "Apple" -> PlantType.APPLE;
-            case "Carrot" -> PlantType.CARROT;
+            case "Cabbage" -> PlantType.CABBAGE;
             case "Tomato" -> PlantType.TOMATO;
-            case "Onion" -> PlantType.ONION;
-            case "Sunflower" -> PlantType.SUNFLOWER;
-            case "Tulip" -> PlantType.TULIP;
-            case "Rose" -> PlantType.ROSE;
+            case "Scallion" -> PlantType.SCALLION;
+            case "Lily" -> PlantType.LILY;
+            case "Daisy" -> PlantType.DAISY;
+            case "Peony" -> PlantType.PEONY;
             default -> null;
         };
     }

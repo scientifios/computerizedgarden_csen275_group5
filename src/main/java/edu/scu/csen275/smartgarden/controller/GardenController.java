@@ -59,18 +59,18 @@ public class GardenController {
         return switch (plantType) {
             // Fruit Plants
             case STRAWBERRY -> new Fruit(position, "Strawberry");
-            case GRAPEVINE -> new Fruit(position, "Grapevine");
+            case CHERRY -> new Fruit(position, "Cherry");
             case APPLE -> new Fruit(position, "Apple Sapling");
             
             // Vegetable Crops
-            case CARROT -> new Vegetable(position, "Carrot");
+            case CABBAGE -> new Vegetable(position, "Cabbage");
             case TOMATO -> new Vegetable(position, "Tomato");
-            case ONION -> new Vegetable(position, "Onion");
+            case SCALLION -> new Vegetable(position, "Scallion");
             
             // Flowers
-            case SUNFLOWER -> new Flower(position, "Sunflower");
-            case TULIP -> new Flower(position, "Tulip");
-            case ROSE -> new Flower(position, "Rose");
+            case DAISY -> new Flower(position, "Daisy");
+            case LILY -> new Flower(position, "Lily");
+            case PEONY -> new Flower(position, "peony");
         };
     }
     

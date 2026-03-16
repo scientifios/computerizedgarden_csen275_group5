@@ -285,28 +285,28 @@ public class AnimatedTile extends StackPane {
 
         String lowerName = plantTypeName.toLowerCase();
         if (lowerName.contains("strawberry")) return "/images/strawberry.png";
-        if (lowerName.contains("grapevine") || lowerName.contains("grape")) return "/images/grape.png";
+        if (lowerName.contains("cherry")) return "/images/cherry.png";
         if (lowerName.contains("apple")) return "/images/apple.png";
-        if (lowerName.contains("carrot")) return "/images/carrot.png";
+        if (lowerName.contains("cabbage")) return "/images/cabbage.png";
         if (lowerName.contains("tomato")) return "/images/tomato.png";
-        if (lowerName.contains("onion")) return "/images/onion.png";
-        if (lowerName.contains("sunflower")) return "/images/sunflower.png";
-        if (lowerName.contains("tulip")) return "/images/tulip.png";
-        if (lowerName.contains("rose")) return "/images/rose.png";
+        if (lowerName.contains("scallion")) return "/images/scallion.png";
+        if (lowerName.contains("daisy")) return "/images/daisy.png";
+        if (lowerName.contains("lily")) return "/images/lily.png";
+        if (lowerName.contains("peony")) return "/images/peony.png";
         return null;
     }
 
     private String getImagePathForPlantType(PlantType type) {
         return switch (type) {
             case STRAWBERRY -> "/images/strawberry.png";
-            case GRAPEVINE -> "/images/grape.png";
+            case CHERRY -> "/images/cherry.png";
             case APPLE -> "/images/apple.png";
-            case CARROT -> "/images/carrot.png";
+            case CABBAGE -> "/images/cabbage.png";
             case TOMATO -> "/images/tomato.png";
-            case ONION -> "/images/onion.png";
-            case SUNFLOWER -> "/images/sunflower.png";
-            case TULIP -> "/images/tulip.png";
-            case ROSE -> "/images/rose.png";
+            case SCALLION -> "/images/scallion.png";
+            case DAISY -> "/images/daisy.png";
+            case LILY -> "/images/lily.png";
+            case PEONY -> "/images/peony.png";
         };
     }
 
