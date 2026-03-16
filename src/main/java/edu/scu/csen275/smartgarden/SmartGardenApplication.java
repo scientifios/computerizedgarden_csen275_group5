@@ -17,13 +17,14 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Separator;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Main JavaFX application for the Smart Garden Simulation.
@@ -33,7 +34,8 @@ public class SmartGardenApplication extends Application {
     private GardenController controller;
     private GardenGridPanel gardenPanel;
     private ModernToolbar toolbar;
-    private InfoPanel infoPanel;
+    private InfoPanel leftInfoPanel;
+    private InfoPanel rightInfoPanel;
     private ListView<String> logListView;
     private Pane decorativePane;
     private AnimatedBackgroundPane animatedBackground;
@@ -47,6 +49,7 @@ public class SmartGardenApplication extends Application {
     
     // Track previous weather to detect changes
     private WeatherSystem.Weather previousWeather = null;
+    private int previousGardenTemperature = Integer.MIN_VALUE;
     
     // API instance (optional - only created if API mode is enabled)
     private GardenSimulationAPI api = null;
@@ -163,7 +166,8 @@ public class SmartGardenApplication extends Application {
         // Create UI components
         toolbar = new ModernToolbar();
         gardenPanel = new GardenGridPanel(controller);
-        infoPanel = new InfoPanel();
+        leftInfoPanel = new InfoPanel(InfoPanel.Mode.LEFT_SYSTEMS);
+        rightInfoPanel = new InfoPanel(InfoPanel.Mode.RIGHT_GARDEN);
         
         // Container for center (garden + decorations + particles)
         StackPane centerContainer = new StackPane();
@@ -179,6 +183,11 @@ public class SmartGardenApplication extends Application {
         
         // Set coin float pane
         gardenPanel.setCoinFloatPane(decorativePane);
+        gardenPanel.setPlantSelectionHandler(position -> rightInfoPanel.setSelectedPlant(position));
+        rightInfoPanel.setPlantSelectionHandler(position -> {
+            gardenPanel.setSelectedPlant(position);
+            rightInfoPanel.setSelectedPlant(position);
+        });
         
         // Setup toolbar actions
         setupToolbarActions();
@@ -201,9 +210,11 @@ public class SmartGardenApplication extends Application {
         
         root.setBottom(toolbar);
         root.setCenter(centerPanel);
-        root.setLeft(infoPanel);
+        root.setLeft(leftInfoPanel);
+        root.setRight(rightInfoPanel);
         BorderPane.setMargin(centerPanel, new Insets(10));
-        BorderPane.setMargin(infoPanel, new Insets(10));
+        BorderPane.setMargin(leftInfoPanel, new Insets(10));
+        BorderPane.setMargin(rightInfoPanel, new Insets(10));
 
         ScrollPane mainScrollPane = new ScrollPane(root);
         mainScrollPane.setFitToWidth(true);
@@ -388,15 +399,15 @@ public class SmartGardenApplication extends Application {
             toolbar.updateStatus(state);
             
             // Update simulation info
-            infoPanel.getTimeLabel().setText("Day " + engine.getDayCounter() + " | " + engine.getFormattedTime());
-            infoPanel.getStatsLabel().setText(
+            leftInfoPanel.getTimeLabel().setText("Day " + engine.getDayCounter() + " | " + engine.getFormattedTime());
+            leftInfoPanel.getStatsLabel().setText(
                 String.format("Plants: %d alive / %d total",
                     garden.getLivingPlants().size(), garden.getTotalPlants())
             );
             
             // Update weather display and rain animation
             WeatherSystem.Weather weather = engine.getWeatherSystem().getCurrentWeather();
-            infoPanel.getWeatherDisplay().updateWeather(weather);
+            leftInfoPanel.getWeatherDisplay().updateWeather(weather);
             
             // Update heating status
             edu.scu.csen275.smartgarden.system.HeatingSystem.HeatingMode heatingMode = 
@@ -408,11 +419,11 @@ public class SmartGardenApplication extends Application {
                 heatingText = "Heating: " + heatingMode.name() + " (" + 
                               engine.getHeatingSystem().getCurrentTemperature() + "°C)";
             }
-            infoPanel.getHeatingStatusLabel().setText(heatingText);
+            leftInfoPanel.getHeatingStatusLabel().setText(heatingText);
             
             // Update temperature label
             int currentTemp = engine.getHeatingSystem().getCurrentTemperature();
-            infoPanel.getTemperatureLabel().setText("Current: " + currentTemp + "C");
+            leftInfoPanel.getTemperatureLabel().setText("Current: " + currentTemp + "C");
             
             // Update background brightness based on weather
             if (animatedBackground != null) {
@@ -436,7 +447,40 @@ public class SmartGardenApplication extends Application {
             double pesticideProgress = Math.max(0, Math.min(1,
                 engine.getPestControlSystem().getPesticideStock() / 50.0));
             
-            infoPanel.updateProgressBars(waterProgress, pesticideProgress);
+            leftInfoPanel.updateProgressBars(waterProgress, pesticideProgress);
+
+            Map<Position, Integer> activePestsByPosition = buildActivePestMap(engine);
+            List<Position> criticalThreatPositions = activePestsByPosition.entrySet().stream()
+                .filter(entry -> entry.getValue() > 0)
+                .map(Map.Entry::getKey)
+                .sorted((a, b) -> {
+                    int rowCompare = Integer.compare(a.row(), b.row());
+                    return rowCompare != 0 ? rowCompare : Integer.compare(a.column(), b.column());
+                })
+                .toList();
+
+            leftInfoPanel.updateLeftPanel(
+                weather,
+                currentTemp,
+                countPlantsNeedingWater(garden),
+                summarizeSprinklerActivations(engine),
+                summarizeSensors(engine),
+                engine.getWateringSystem().getWaterSupply(),
+                formatHeatingStatus(engine),
+                formatCoolingStatus(engine),
+                currentTemp,
+                formatTemperatureTrend(currentTemp),
+                engine.getPestControlSystem().getHarmfulPestCount(),
+                formatCriticalThreats(criticalThreatPositions),
+                engine.getPestControlSystem().getPesticideStock()
+            );
+            rightInfoPanel.updateGardenInfo(
+                engine.getDayCounter(),
+                engine.getFormattedTime(),
+                garden.getLivingPlants().size(),
+                garden.getAllPlants(),
+                activePestsByPosition
+            );
             
             // Update logs and detect automatic watering
             List<String> recentLogs = new ArrayList<>();
@@ -556,7 +600,83 @@ public class SmartGardenApplication extends Application {
             e.printStackTrace();
         }
     }
-    
+
+    private int countPlantsNeedingWater(Garden garden) {
+        return (int) garden.getLivingPlants().stream()
+            .filter(plant -> plant.getWaterLevel() < plant.getWaterRequirement())
+            .count();
+    }
+
+    private String summarizeSprinklerActivations(SimulationEngine engine) {
+        int totalActivations = engine.getGarden().getZones().stream()
+            .map(zone -> zone.getZoneId())
+            .filter(zoneId -> engine.getWateringSystem().getSprinkler(zoneId) != null
+                && engine.getWateringSystem().getSprinkler(zoneId) != null)
+            .mapToInt(zoneId -> engine.getWateringSystem().getSprinkler(zoneId).getActivationCount())
+            .sum();
+        return String.valueOf(totalActivations);
+    }
+
+    private String summarizeSensors(SimulationEngine engine) {
+        long activeCount = engine.getGarden().getZones().stream()
+            .map(zone -> engine.getWateringSystem().getSensor(zone.getZoneId()))
+            .filter(sensor -> sensor != null && sensor.getStatus() == edu.scu.csen275.smartgarden.system.Sensor.SensorStatus.ACTIVE)
+            .count();
+        return activeCount + " / " + engine.getGarden().getZones().size() + " active";
+    }
+
+    private String formatHeatingStatus(SimulationEngine engine) {
+        var mode = engine.getHeatingSystem().getHeatingMode();
+        if (mode == edu.scu.csen275.smartgarden.system.HeatingSystem.HeatingMode.OFF) {
+            return "Off";
+        }
+        return mode.name() + " at " + engine.getHeatingSystem().getCurrentTemperature() + "C";
+    }
+
+    private String formatCoolingStatus(SimulationEngine engine) {
+        var mode = engine.getCoolingSystem().getCoolingMode();
+        if (mode == edu.scu.csen275.smartgarden.system.CoolingSystem.CoolingMode.OFF) {
+            return "Off";
+        }
+        return mode.name() + " at " + engine.getCoolingSystem().getCurrentTemperature() + "C";
+    }
+
+    private String formatTemperatureTrend(int currentTemp) {
+        if (previousGardenTemperature == Integer.MIN_VALUE) {
+            previousGardenTemperature = currentTemp;
+            return "Stable";
+        }
+
+        int delta = currentTemp - previousGardenTemperature;
+        previousGardenTemperature = currentTemp;
+        if (delta > 0) {
+            return "Rising (+" + delta + "C)";
+        }
+        if (delta < 0) {
+            return "Cooling (" + delta + "C)";
+        }
+        return "Stable";
+    }
+
+    private String formatCriticalThreats(List<Position> criticalThreatPositions) {
+        if (criticalThreatPositions.isEmpty()) {
+            return "None";
+        }
+        return criticalThreatPositions.stream()
+            .map(position -> "(" + (position.row() + 1) + "," + (position.column() + 1) + ")")
+            .collect(Collectors.joining(", "));
+    }
+
+    private Map<Position, Integer> buildActivePestMap(SimulationEngine engine) {
+        Map<Position, Integer> pestsByPosition = new HashMap<>();
+        for (var pest : engine.getPestControlSystem().getPests()) {
+            if (pest != null && pest.isAlive()) {
+                pestsByPosition.merge(pest.getPosition(), 1, Integer::sum);
+            }
+        }
+        return pestsByPosition;
+    }
+
     /**
      * Monitors pest state and updates UI animations.
      */

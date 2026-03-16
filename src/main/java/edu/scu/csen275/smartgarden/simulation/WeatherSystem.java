@@ -71,6 +71,34 @@ public class WeatherSystem {
     public boolean isApiModeEnabled() {
         return apiModeEnabled;
     }
+
+    /**
+     * Advances one API day for weather state handling.
+     * In API mode, weather is daily. Every new day resets to SUNNY baseline.
+     */
+    public void apiAdvanceDay() {
+        if (!apiModeEnabled) {
+            return;
+        }
+        
+        // New API day starts from default SUNNY weather unless explicitly set again.
+        if (currentWeather.get() != Weather.SUNNY) {
+            previousWeather = currentWeather.get();
+            currentWeather.set(Weather.SUNNY);
+            garden.setWeather(Weather.SUNNY.name());
+            logger.info("Weather", "API day advanced. Weather reset to SUNNY");
+        }
+        
+        // Also reset ambient temperature to SUNNY baseline (20C).
+        heatingSystem.setAmbientTemperature(20);
+        if (coolingSystem != null) {
+            coolingSystem.setAmbientTemperature(20);
+        }
+        heatingSystem.update();
+        if (coolingSystem != null) {
+            coolingSystem.update();
+        }
+    }
     
     /** Per-tick update. Auto-change is skipped in API mode and real-time rotation mode. */
     public void update() {
@@ -81,6 +109,9 @@ public class WeatherSystem {
                 changeWeather();
             }
         }
+        // if(apiModeEnabled){
+        //     changeWeather();
+        // }
         
         if (currentWeather.get() == Weather.RAINY) {
             applyWeatherEffects();
@@ -311,6 +342,16 @@ public class WeatherSystem {
         weatherDuration = 60;
         logger.info("Weather", "Weather manually set to " + weather);
     }
+
+    // // reset machanism in api mode
+    // public void restoreWeather() {
+    //     if(apiModeEnabled){
+    //         currentWeather.set(Weather.SUNNY);
+    //         applyTemperatureForWeather(Weather.SUNNY);
+    //         garden.setWeather(Weather.SUNNY.name());
+    //         logger.info("Weather", "Weather reset to" + Weather.SUNNY + "in API Mode");
+    //     }
+    // }
     
     public Weather getForecast() {
         return generateNextWeather(currentWeather.get());
@@ -360,4 +401,3 @@ public class WeatherSystem {
                ", Duration left: " + weatherDuration + " min]";
     }
 }
-
