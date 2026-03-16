@@ -22,14 +22,14 @@
       }
     },   
     {
-      "type": "Carrot",
+      "type": "Cabbage",
       "position": {
         "row": 2,
         "column": 2
       }
     },
     {
-      "type": "Carrot",
+      "type": "Cabbage",
       "position": {
         "row": 2,
         "column": 4
@@ -50,28 +50,28 @@
       }
     },
     {
-      "type": "Sunflower",
+      "type": "Daisy",
       "position": {
         "row": 4,
         "column": 4
       }
     },
     {
-      "type": "Sunflower",
+      "type": "Daisy",
       "position": {
         "row": 4,
         "column": 1
       }
     },
     {
-      "type": "Sunflower",
+      "type": "Daisy",
       "position": {
         "row": 4,
         "column": 2
       }
     },
     {
-      "type": "Sunflower",
+      "type": "Daisy",
       "position": {
         "row": 4,
         "column": 3
