@@ -54,12 +54,13 @@ public class SmartGardenApplication extends Application {
     // API instance (optional - only created if API mode is enabled)
     private GardenSimulationAPI api = null;
     
-    private static final int GRID_SIZE = 9;
+    private static final int GRID_ROWS = 8;
+    private static final int GRID_COLS = 14;
     
     @Override
     public void start(Stage primaryStage) {
         try {
-            controller = new GardenController(GRID_SIZE, GRID_SIZE);
+            controller = new GardenController(GRID_ROWS, GRID_COLS);
             
             // Initialize pest event bridge and connect to PestControlSystem
             pestEventBridge = new PestEventBridge();

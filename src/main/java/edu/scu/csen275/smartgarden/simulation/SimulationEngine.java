@@ -140,8 +140,8 @@ public class SimulationEngine {
             
             autoRefillSupplies();
             
-            // Day boundary scales with speed (faster speed => faster day progression)
-            if (ticksPerDay >= TICKS_PER_SIM_DAY / speedMultiplier.get()) {
+            // Check for new day
+            if (ticksPerDay >= TICKS_PER_SIM_DAY) {
                 advanceDay();
                 ticksPerDay = 0;
             }

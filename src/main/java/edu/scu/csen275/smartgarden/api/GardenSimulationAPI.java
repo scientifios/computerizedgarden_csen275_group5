@@ -116,8 +116,8 @@ private static void loadPestVulnerabilitiesFromConfig() {
      * Use this constructor for simple API usage as shown in the specification.
      */
     public GardenSimulationAPI() {
-        // Create default GardenController (9x9 grid)
-        this(new GardenController(9, 9));
+        // Create default GardenController (8x14 grid)
+        this(new GardenController(8, 14));
     }
     
     /**
