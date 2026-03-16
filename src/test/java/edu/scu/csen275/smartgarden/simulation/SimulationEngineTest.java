@@ -7,6 +7,9 @@ import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.time.LocalDateTime;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -182,6 +185,21 @@ public class SimulationEngineTest {
         assertThrows(IllegalArgumentException.class, () -> engine.setSpeed(100));
     }
 
+    @Test
+    @DisplayName("Day progression matches simulated time regardless of speed")
+    void testDayProgressionIgnoresSpeedMultiplier() throws Exception {
+        engine.setSpeed(4);
+        LocalDateTime initialTime = engine.getSimulationTime();
+
+        invokeTicks(1439);
+        assertEquals(0, engine.getDayCounter(), "A day should not advance before 1440 simulated minutes");
+        assertEquals(initialTime.plusMinutes(1439), engine.getSimulationTime());
+
+        invokeTicks(1);
+        assertEquals(1, engine.getDayCounter(), "A day should advance after 1440 simulated minutes");
+        assertEquals(initialTime.plusMinutes(1440), engine.getSimulationTime());
+    }
+
     // ==================== Garden Integration Tests ====================
 
     @Test
@@ -318,6 +336,27 @@ public class SimulationEngineTest {
             
             engine.resume();
             assertEquals(SimulationState.RUNNING, engine.getState());
+        }
+    }
+
+    private void invokeTicks(int count) throws Exception {
+        Method tickMethod = SimulationEngine.class.getDeclaredMethod("tick");
+        tickMethod.setAccessible(true);
+
+        for (int i = 0; i < count; i++) {
+            invokeTick(tickMethod);
+        }
+    }
+
+    private void invokeTick(Method tickMethod) throws Exception {
+        try {
+            tickMethod.invoke(engine);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof Exception exception) {
+                throw exception;
+            }
+            throw e;
         }
     }
 }

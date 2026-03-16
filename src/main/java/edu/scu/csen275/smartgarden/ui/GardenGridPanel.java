@@ -11,8 +11,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.*;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -29,7 +27,8 @@ public class GardenGridPanel extends VBox {
     private Pane coinFloatPane; // Pane for coin float animations
     private Position selectedPlantPosition;
     private Consumer<Position> plantSelectionHandler;
-    private static final int GRID_SIZE = 9;
+    private final int gridRows;
+    private final int gridCols;
     
     /**
      * Gets the animation container.
@@ -87,8 +86,10 @@ public class GardenGridPanel extends VBox {
     
     public GardenGridPanel(GardenController controller) {
         this.controller = controller;
-        this.tiles = new AnimatedTile[GRID_SIZE][GRID_SIZE];
-        this.grassTiles = new GrassTile[GRID_SIZE][GRID_SIZE];
+        this.gridRows = controller.getGarden().getRows();
+        this.gridCols = controller.getGarden().getColumns();
+        this.tiles = new AnimatedTile[gridRows][gridCols];
+        this.grassTiles = new GrassTile[gridRows][gridCols];
         this.gardenGrid = new GridPane();
         
         setupPanel();
@@ -103,8 +104,8 @@ public class GardenGridPanel extends VBox {
         this.animationContainer = container;
         
         // Also set animation container on all existing tiles
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 if (tiles[row][col] != null) {
                     tiles[row][col].setAnimationContainer(container);
                 }
@@ -157,8 +158,7 @@ public class GardenGridPanel extends VBox {
         // Set default value
         plantSelector.setValue(PlantType.STRAWBERRY);
         
-        // Custom cell factory to display emoji + name with colorful emojis
-        // Use setGraphic with Text node for proper emoji color rendering
+        // Cell factory: show plant name only (no emoji)
         plantSelector.setCellFactory(list -> new ListCell<PlantType>() {
             @Override
             protected void updateItem(PlantType item, boolean empty) {
@@ -166,56 +166,14 @@ public class GardenGridPanel extends VBox {
                 if (empty || item == null) {
                     setText(null);
                     setGraphic(null);
-                    setStyle("");
                 } else {
-                    System.out.println("DEBUG: Rendering dropdown item: " + item.getDisplayName() + " emoji: " + item.getEmoji());
-                    System.out.println("DEBUG: Emoji character code: " + (int)item.getEmoji().charAt(0));
-                    
-                    // Create HBox with Text node for emoji (like AnimatedTile does) and Label for name
-                    HBox cellContent = new HBox(5);
-                    cellContent.setAlignment(Pos.CENTER_LEFT);
-                    
-                    // Text node for emoji (colorful rendering) - same approach as AnimatedTile
-                    Text emojiText = new Text(item.getEmoji());
-                    System.out.println("DEBUG: Emoji string length: " + item.getEmoji().length() + ", chars: " + item.getEmoji().codePointCount(0, item.getEmoji().length()));
-                    System.out.println("DEBUG: Full emoji string: " + java.util.Arrays.toString(item.getEmoji().getBytes(java.nio.charset.StandardCharsets.UTF_8)));
-                    
-                    // Use same font loading as AnimatedTile
-                    try {
-                        Font emojiFont = Font.font("Segoe UI Emoji", 20);
-                        emojiText.setFont(emojiFont);
-                        System.out.println("DEBUG: Successfully loaded Segoe UI Emoji font");
-                    } catch (Exception e) {
-                        try {
-                            Font emojiFont = Font.font("Apple Color Emoji", 20);
-                            emojiText.setFont(emojiFont);
-                            System.out.println("DEBUG: Successfully loaded Apple Color Emoji font");
-                        } catch (Exception e2) {
-                            emojiText.setFont(Font.font(20));
-                            System.out.println("DEBUG: Using fallback font");
-                        }
-                    }
-                    
-                    // NOTE: JavaFX ComboBox cells on Windows have a known limitation where
-                    // color emojis may render as black even with correct fonts.
-                    // As a workaround, we'll show the emoji in the button cell but only show
-                    // the plant name in dropdown items to avoid the black emoji issue.
-                    // The emoji will still appear correctly in the garden tiles.
-                    
-                    // For dropdown items, just show the plant name (emoji shows as black anyway)
-                    Label nameLabel = new Label(item.getDisplayName());
-                    nameLabel.getStyleClass().add("plant-name-label");
-                    
-                    cellContent.getChildren().add(nameLabel);
-                    setGraphic(cellContent);
-                    setText(null);
-                    if (!getStyleClass().contains("plant-selector-cell")) getStyleClass().add("plant-selector-cell");
+                    setText(item.getDisplayName());
+                    setGraphic(null);
                 }
             }
         });
-        
-        // Custom button cell to show selected plant
-        // Use setGraphic with Text node for proper emoji color rendering
+
+        // Button cell: show selected plant name only (no emoji)
         plantSelector.setButtonCell(new ListCell<PlantType>() {
             @Override
             protected void updateItem(PlantType item, boolean empty) {
@@ -224,52 +182,8 @@ public class GardenGridPanel extends VBox {
                     setText("Select Plant");
                     setGraphic(null);
                 } else {
-                    System.out.println("DEBUG: Rendering button cell: " + item.getDisplayName() + " emoji: " + item.getEmoji());
-                    System.out.println("DEBUG: Button cell - Emoji character code: " + (int)item.getEmoji().charAt(0));
-                    
-                    // Create HBox with Text node for emoji (like AnimatedTile does) and Label for name
-                    HBox buttonContent = new HBox(5);
-                    buttonContent.setAlignment(Pos.CENTER_LEFT);
-                    
-                    // Text node for emoji (colorful rendering) - same approach as AnimatedTile
-                    Text emojiText = new Text(item.getEmoji());
-                    System.out.println("DEBUG: Button cell - Emoji string length: " + item.getEmoji().length() + ", chars: " + item.getEmoji().codePointCount(0, item.getEmoji().length()));
-                    
-                    // Use same font loading as AnimatedTile
-                    try {
-                        Font emojiFont = Font.font("Segoe UI Emoji", 18);
-                        emojiText.setFont(emojiFont);
-                        System.out.println("DEBUG: Button cell - Successfully loaded Segoe UI Emoji font");
-                    } catch (Exception e) {
-                        try {
-                            Font emojiFont = Font.font("Apple Color Emoji", 18);
-                            emojiText.setFont(emojiFont);
-                            System.out.println("DEBUG: Button cell - Successfully loaded Apple Color Emoji font");
-                        } catch (Exception e2) {
-                            emojiText.setFont(Font.font(18));
-                            System.out.println("DEBUG: Button cell - Using fallback font");
-                        }
-                    }
-                    
-                    // WORKAROUND: JavaFX ComboBox cells may force black text, so we need to explicitly
-                    // prevent fill color inheritance. Try setting fill to null or using a wrapper.
-                    // Actually, let's try wrapping in a StackPane to isolate from cell styling
-                    StackPane emojiWrapper = new StackPane(emojiText);
-                    emojiWrapper.setAlignment(Pos.CENTER);
-                    emojiWrapper.getStyleClass().add("transparent-bg");
-                    // Don't set fill on Text - let emoji render in natural color
-                    
-                    // Label for plant name
-                    Label nameLabel = new Label(item.getDisplayName());
-                    nameLabel.getStyleClass().add("plant-name-label");
-                    
-                    buttonContent.getChildren().addAll(emojiWrapper, nameLabel);
-                    setGraphic(buttonContent);
-                    setText(null); // Clear text, use graphic instead
-                    // CRITICAL: Don't set any text-fill on the cell - it would override emoji colors
-                    // Also ensure the cell doesn't apply any default styling to children
-                    if (!getStyleClass().contains("combo-cell-transparent-text")) getStyleClass().add("combo-cell-transparent-text");
-                    // The transparent text-fill on the cell won't affect the graphic's Text node
+                    setText(item.getDisplayName());
+                    setGraphic(null);
                 }
             }
         });
@@ -298,15 +212,15 @@ public class GardenGridPanel extends VBox {
         gardenGrid.getStyleClass().add("garden-grid");
         gardenGrid.setAlignment(Pos.CENTER);
         
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 // Create grass tile for empty cells
                 GrassTile grassTile = new GrassTile();
                 grassTiles[row][col] = grassTile;
                 
                 // Create plant tile (hidden initially)
                 AnimatedTile tile = createTile(row, col);
-                int tileIndex = (row * GRID_SIZE + col);
+                int tileIndex = (row * gridCols + col);
                 tile.setTileIndex(tileIndex);
                 tiles[row][col] = tile;
                 tile.setVisible(false); // Hidden until plant is added
@@ -480,7 +394,7 @@ public class GardenGridPanel extends VBox {
      * Updates a specific tile.
      */
     public void updateTile(int row, int col) {
-        if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+        if (row >= 0 && row < gridRows && col >= 0 && col < gridCols) {
             Position position = new Position(row, col);
             Plant plant = controller.getGarden().getPlant(position);
             
@@ -505,8 +419,8 @@ public class GardenGridPanel extends VBox {
      * Updates all tiles in the grid.
      */
     public void updateAllTiles() {
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 updateTile(row, col);
             }
         }
@@ -525,8 +439,8 @@ public class GardenGridPanel extends VBox {
         int startCol = zoneCol * tilesPerZone;
         int endCol = startCol + tilesPerZone;
         
-        for (int row = startRow; row < endRow && row < GRID_SIZE; row++) {
-            for (int col = startCol; col < endCol && col < GRID_SIZE; col++) {
+        for (int row = startRow; row < endRow && row < gridRows; row++) {
+            for (int col = startCol; col < endCol && col < gridCols; col++) {
                 Position position = new Position(row, col);
                 Plant plant = controller.getGarden().getPlant(position);
                 if (tiles[row][col] != null && plant != null) {
@@ -541,8 +455,8 @@ public class GardenGridPanel extends VBox {
      * Refreshes tile state after global watering.
      */
     public void animateAllTilesWatering() {
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 Position position = new Position(row, col);
                 Plant plant = controller.getGarden().getPlant(position);
                 if (tiles[row][col] != null && plant != null) {
@@ -566,8 +480,8 @@ public class GardenGridPanel extends VBox {
         int startCol = zoneCol * tilesPerZone;
         int endCol = startCol + tilesPerZone;
         
-        for (int row = startRow; row < endRow && row < GRID_SIZE; row++) {
-            for (int col = startCol; col < endCol && col < GRID_SIZE; col++) {
+        for (int row = startRow; row < endRow && row < gridRows; row++) {
+            for (int col = startCol; col < endCol && col < gridCols; col++) {
                 if (tiles[row][col] != null) {
                     tiles[row][col].animatePesticide();
                 }
@@ -579,8 +493,8 @@ public class GardenGridPanel extends VBox {
      * Clears all plants from the garden.
      */
     private void clearGarden() {
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 controller.removePlant(new Position(row, col));
             }
         }
@@ -597,8 +511,8 @@ public class GardenGridPanel extends VBox {
      * Handles pest spawn event - spawns pest sprite on tile.
      */
     public void onPestSpawned(Position position, String pestType, boolean isHarmful) {
-        if (position.row() >= 0 && position.row() < GRID_SIZE && 
-            position.column() >= 0 && position.column() < GRID_SIZE) {
+        if (position.row() >= 0 && position.row() < gridRows && 
+            position.column() >= 0 && position.column() < gridCols) {
             
             AnimatedTile tile = tiles[position.row()][position.column()];
             
@@ -619,8 +533,8 @@ public class GardenGridPanel extends VBox {
      * Handles pest attack event - shows damage visual.
      */
     public void onPestAttack(Position position, int damage) {
-        if (position.row() >= 0 && position.row() < GRID_SIZE && 
-            position.column() >= 0 && position.column() < GRID_SIZE) {
+        if (position.row() >= 0 && position.row() < gridRows && 
+            position.column() >= 0 && position.column() < gridCols) {
             
             AnimatedTile tile = tiles[position.row()][position.column()];
             if (tile != null && tile.isVisible()) {
@@ -637,8 +551,8 @@ public class GardenGridPanel extends VBox {
         for (var plant : zone.getPlants()) {
             if (!plant.isDead()) {
                 Position pos = plant.getPosition();
-                if (pos.row() >= 0 && pos.row() < GRID_SIZE && 
-                    pos.column() >= 0 && pos.column() < GRID_SIZE) {
+                if (pos.row() >= 0 && pos.row() < gridRows && 
+                    pos.column() >= 0 && pos.column() < gridCols) {
                     
                     AnimatedTile tile = tiles[pos.row()][pos.column()];
                     if (tile != null && tile.isVisible() && tile.hasPests()) {
@@ -653,8 +567,8 @@ public class GardenGridPanel extends VBox {
      * Handles pesticide application at a specific position.
      */
     public void onPesticideApplied(Position position) {
-        if (position.row() >= 0 && position.row() < GRID_SIZE && 
-            position.column() >= 0 && position.column() < GRID_SIZE) {
+        if (position.row() >= 0 && position.row() < gridRows && 
+            position.column() >= 0 && position.column() < gridCols) {
             
             AnimatedTile tile = tiles[position.row()][position.column()];
             if (tile != null && tile.isVisible() && tile.hasPests()) {
@@ -667,7 +581,7 @@ public class GardenGridPanel extends VBox {
      * Gets the tile at a specific position.
      */
     public AnimatedTile getTileAt(int row, int col) {
-        if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+        if (row >= 0 && row < gridRows && col >= 0 && col < gridCols) {
             return tiles[row][col];
         }
         return null;
@@ -675,8 +589,8 @@ public class GardenGridPanel extends VBox {
 
     public void setSelectedPlant(Position position) {
         selectedPlantPosition = position;
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 if (tiles[row][col] != null) {
                     tiles[row][col].setSelected(position != null && position.row() == row && position.column() == col);
                 }

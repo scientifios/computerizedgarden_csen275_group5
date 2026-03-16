@@ -166,7 +166,7 @@ public class SimulationEngine {
             autoRefillSupplies();
             
             // Check for new day
-            if (ticksPerDay >= TICKS_PER_SIM_DAY / speedMultiplier.get()) {
+            if (ticksPerDay >= TICKS_PER_SIM_DAY) {
                 advanceDay();
                 ticksPerDay = 0;
             }
