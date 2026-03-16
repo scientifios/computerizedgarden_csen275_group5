@@ -37,6 +37,7 @@ public class SmartGardenApplication extends Application {
     private InfoPanel leftInfoPanel;
     private InfoPanel rightInfoPanel;
     private ListView<String> logListView;
+    private boolean autoScrollLogs = true;
     private Pane decorativePane;
     private AnimatedBackgroundPane animatedBackground;
     private ParticleSystem particleSystem;
@@ -302,6 +303,24 @@ public class SmartGardenApplication extends Application {
         
         Label logTitle = new Label("Events");
         logTitle.getStyleClass().add("log-title");
+
+        javafx.scene.control.Button clearButton = new javafx.scene.control.Button("Clear");
+        clearButton.getStyleClass().add("modern-button");
+        clearButton.setOnAction(e -> {
+            if (logListView != null) {
+                logListView.getItems().clear();
+            }
+        });
+
+        javafx.scene.control.Button pauseButton = new javafx.scene.control.Button("Pause Auto-Scroll");
+        pauseButton.getStyleClass().add("modern-button");
+        pauseButton.setOnAction(e -> {
+            autoScrollLogs = !autoScrollLogs;
+            pauseButton.setText(autoScrollLogs ? "Pause Auto-Scroll" : "Resume Auto-Scroll");
+        });
+
+        HBox titleBar = new HBox(10, logTitle, clearButton, pauseButton);
+        titleBar.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         
         logListView = new ListView<>();
         logListView.setPrefHeight(150); // Increased height
@@ -315,7 +334,7 @@ public class SmartGardenApplication extends Application {
         // Add initial test message to verify list view works
         logListView.getItems().add("Log panel initialized - waiting for events...");
         
-        logPanel.getChildren().addAll(logTitle, logListView);
+        logPanel.getChildren().addAll(titleBar, logListView);
         return logPanel;
     }
     
@@ -565,12 +584,12 @@ public class SmartGardenApplication extends Application {
                     javafx.application.Platform.runLater(() -> {
                         try {
                             logListView.getItems().clear();
-                            
+
                             if (!recentLogs.isEmpty()) {
                                 logListView.getItems().addAll(recentLogs);
-                                
-                                // Auto-scroll to bottom of log
-                                if (!logListView.getItems().isEmpty()) {
+
+                                // Auto-scroll to bottom of log if enabled
+                                if (autoScrollLogs && !logListView.getItems().isEmpty()) {
                                     logListView.scrollTo(logListView.getItems().size() - 1);
                                 }
                             } else {
