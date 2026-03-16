@@ -197,20 +197,18 @@ public class SmartGardenApplication extends Application {
         // Create log panel
         VBox logPanel = createLogPanel();
         
-        // Center panel: log on top, garden below (integrated)
+        // Center panel: control toolbar, log on top, garden below (integrated)
         VBox centerPanel = new VBox();
+        centerPanel.setSpacing(8);
         centerPanel.setStyle("-fx-background-color: transparent;");
         VBox.setVgrow(centerContainer, Priority.ALWAYS);
-        centerPanel.getChildren().addAll(logPanel, centerContainer);
+        centerPanel.getChildren().addAll(toolbar, logPanel, centerContainer);
         
         // Root BorderPane with transparent background
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: transparent;");
-        
-        // Make toolbar semi-transparent so clouds show through
-        toolbar.setStyle("-fx-background-color: rgba(0, 0, 0, 0.9);");
-        
-        root.setBottom(toolbar);
+
+        // Toolbar is now part of centerPanel as a control strip above logs
         root.setCenter(centerPanel);
         root.setLeft(leftInfoPanel);
         root.setRight(rightInfoPanel);
