@@ -15,13 +15,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Panel containing the interactive garden grid with animated tiles.
+ * UI panel that renders the garden grid and routes user interactions to the controller.
  */
 public class GardenGridPanel extends VBox {
     private final GardenController controller;
     private final GridPane gardenGrid;
     private final AnimatedTile[][] tiles;
-    private final GrassTile[][] grassTiles; // Grass tiles for empty cells
+    private final GrassTile[][] grassTiles;
     private ComboBox<PlantType> plantSelector;
     private Pane animationContainer; // Container for watering animations
     private Pane coinFloatPane; // Pane for coin float animations
@@ -31,14 +31,14 @@ public class GardenGridPanel extends VBox {
     private final int gridCols;
     
     /**
-     * Gets the animation container.
+     * Returns the overlay pane used for transient UI effects.
      */
     public Pane getAnimationContainer() {
         return animationContainer;
     }
     
     /**
-     * Sets the pane for coin float animations.
+     * Sets the pane used for coin/score overlay effects.
      */
     public void setCoinFloatPane(Pane pane) {
         this.coinFloatPane = pane;
@@ -49,17 +49,14 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Safely applies an effect to a node, deferring if not in scene.
+     * Applies an effect when the node is ready (scene attached and bounds available).
      */
     private void safeSetEffect(javafx.scene.Node node, javafx.scene.effect.Effect effect) {
         if (node.getScene() != null && node.getBoundsInLocal().getWidth() > 0 && node.getBoundsInLocal().getHeight() > 0) {
-            // Node is in scene and has valid bounds, apply immediately
             node.setEffect(effect);
         } else {
-            // Defer until node is in scene
             node.sceneProperty().addListener((obs, oldScene, newScene) -> {
                 if (newScene != null) {
-                    // Use Platform.runLater to ensure layout is complete
                     javafx.application.Platform.runLater(() -> {
                         if (node.getBoundsInLocal().getWidth() > 0 && node.getBoundsInLocal().getHeight() > 0) {
                             node.setEffect(effect);
@@ -71,7 +68,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Helper to find particle system and trigger sparkles.
+     * Walks the scene graph to locate a ParticleSystem and emit a burst at (x, y).
      */
     private void findAndTriggerSparkles(javafx.scene.Node node, double x, double y) {
         if (node instanceof ParticleSystem) {
@@ -98,7 +95,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Sets the animation container for watering effects overlay.
+     * Sets the overlay pane used for tile-level visual hints and effects.
      */
     public void setAnimationContainer(Pane container) {
         this.animationContainer = container;
@@ -114,17 +111,16 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Sets up the main panel.
+     * Initializes layout and style classes for the panel.
      */
     private void setupPanel() {
         this.setSpacing(15);
         this.setAlignment(Pos.CENTER);
         this.getStyleClass().add("garden-panel");
-        // Make panel background transparent so animated background shows through
     }
     
     /**
-     * Sets up plant selector dropdown with categorized PlantType enum.
+     * Builds the plant selection controls and configures the ComboBox rendering.
      */
     private void setupPlantSelector() {
         HBox selectorBox = new HBox(10);
@@ -139,21 +135,20 @@ public class GardenGridPanel extends VBox {
         plantSelector.setDisable(false); // Ensure it's enabled
         plantSelector.setFocusTraversable(true); // Allow focus
         
-        // Add all plant types grouped by category
-        // Fruit Plants
+        // Fruits
         plantSelector.getItems().add(PlantType.STRAWBERRY);
-        plantSelector.getItems().add(PlantType.GRAPEVINE);
+        plantSelector.getItems().add(PlantType.CHERRY);
         plantSelector.getItems().add(PlantType.APPLE);
         
-        // Vegetable Crops
-        plantSelector.getItems().add(PlantType.CARROT);
+        // Vegetable
+        plantSelector.getItems().add(PlantType.CABBAGE);
         plantSelector.getItems().add(PlantType.TOMATO);
-        plantSelector.getItems().add(PlantType.ONION);
+        plantSelector.getItems().add(PlantType.SCALLION);
         
         // Flowers
-        plantSelector.getItems().add(PlantType.SUNFLOWER);
-        plantSelector.getItems().add(PlantType.TULIP);
-        plantSelector.getItems().add(PlantType.ROSE);
+        plantSelector.getItems().add(PlantType.DAISY);
+        plantSelector.getItems().add(PlantType.LILY);
+        plantSelector.getItems().add(PlantType.PEONY);
         
         // Set default value
         plantSelector.setValue(PlantType.STRAWBERRY);
@@ -188,10 +183,8 @@ public class GardenGridPanel extends VBox {
             }
         });
         
-        // Ensure dropdown is visible and can open
-        plantSelector.setVisibleRowCount(10); // Show more items
+        plantSelector.setVisibleRowCount(10);
 
-        // Style via CSS classes.
         plantSelector.getStyleClass().add("modern-combo");
         plantSelector.setPrefWidth(200);
         
@@ -204,7 +197,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Sets up the garden grid with animated tiles.
+     * Creates the grid layout and initializes per-cell UI nodes.
      */
     private void setupGrid() {
         gardenGrid.setHgap(3);
@@ -218,14 +211,12 @@ public class GardenGridPanel extends VBox {
                 GrassTile grassTile = new GrassTile();
                 grassTiles[row][col] = grassTile;
                 
-                // Create plant tile (hidden initially)
                 AnimatedTile tile = createTile(row, col);
                 int tileIndex = (row * gridCols + col);
                 tile.setTileIndex(tileIndex);
                 tiles[row][col] = tile;
-                tile.setVisible(false); // Hidden until plant is added
+                tile.setVisible(false);
                 
-                // Stack grass and plant tiles so plant appears on top
                 StackPane tileStack = new StackPane();
                 tileStack.getChildren().addAll(grassTile, tile);
                 tileStack.setAlignment(javafx.geometry.Pos.CENTER);
@@ -238,23 +229,20 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Creates an animated tile for a grid cell.
+     * Creates and wires UI behavior for a single grid cell.
      */
     private AnimatedTile createTile(int row, int col) {
         AnimatedTile tile = new AnimatedTile();
         Position position = new Position(row, col);
         GrassTile grassTile = grassTiles[row][col];
         
-        // Set animation container on tile if available
         if (animationContainer != null) {
             tile.setAnimationContainer(animationContainer);
         }
         
-        // Click handler - attach to grass tile (which is always visible for empty cells)
         grassTile.setOnMouseClicked(e -> {
             Plant existing = controller.getGarden().getPlant(position);
             
-            // Create sparkle burst at click location
             javafx.geometry.Bounds bounds = grassTile.localToScene(grassTile.getBoundsInLocal());
             if (bounds != null && getAnimationContainer() != null) {
                 Pane container = getAnimationContainer();
@@ -274,21 +262,17 @@ public class GardenGridPanel extends VBox {
             if (existing == null) {
                 PlantType selectedType = plantSelector.getValue();
                 if (selectedType != null && controller.plantSeed(selectedType, position)) {
-                    // Plant appears at full size immediately (no growth animation)
                     updateTile(row, col);
                     
-                    // Float petals from grass when planting (only if there was a flower)
                     if (grassTile.hasFlower()) {
                         grassTile.floatPetals();
                     }
                 }
-                // No auto-bloom - keep empty tiles icon-free
             } else {
                 showPlantTooltip(tile, existing);
             }
         });
         
-        // Also attach click handler to plant tile when visible
         tile.setOnMouseClicked(e -> {
             Plant existing = controller.getGarden().getPlant(position);
             if (existing != null) {
@@ -297,7 +281,6 @@ public class GardenGridPanel extends VBox {
             }
         });
         
-        // Hover effects on grass tile
         grassTile.setOnMouseEntered(e -> {
             if (tile.isVisible()) {
                 tile.applyHoverEffect();
@@ -306,7 +289,6 @@ public class GardenGridPanel extends VBox {
                     showHoverTooltip(tile, plant);
                 }
             } else {
-                // Hover effect on grass - make it glow slightly
                 safeSetEffect(grassTile, new javafx.scene.effect.Glow(0.2));
             }
         });
@@ -319,7 +301,6 @@ public class GardenGridPanel extends VBox {
             }
         });
         
-        // Hover effects on plant tile
         tile.setOnMouseEntered(e -> {
             if (tile.isVisible()) {
                 tile.applyHoverEffect();
@@ -340,7 +321,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Shows tooltip on hover with plant information.
+     * Installs a hover tooltip describing the plant state.
      */
     private void showHoverTooltip(AnimatedTile tile, Plant plant) {
         String tooltipText = String.format(
@@ -357,10 +338,9 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Shows detailed plant information dialog.
+     * Opens a detail dialog for the selected plant.
      */
     private void showPlantTooltip(AnimatedTile tile, Plant plant) {
-        // Get active pest count at this plant's position
         int activePestCount = controller.getSimulationEngine()
             .getPestControlSystem()
             .getActivePestCountAtPosition(plant.getPosition());
@@ -391,7 +371,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Updates a specific tile.
+     * Refreshes UI for a single grid cell based on current model state.
      */
     public void updateTile(int row, int col) {
         if (row >= 0 && row < gridRows && col >= 0 && col < gridCols) {
@@ -399,14 +379,10 @@ public class GardenGridPanel extends VBox {
             Plant plant = controller.getGarden().getPlant(position);
             
             if (plant == null) {
-                // Show grass tile, hide plant tile
                 grassTiles[row][col].setVisible(true);
                 tiles[row][col].setVisible(false);
-                // No icons on empty grass - just plain grass
             } else {
-                // Show plant tile, hide grass tile
                 grassTiles[row][col].setVisible(false);
-                // Remove any flower icon from grass when plant is shown
                 grassTiles[row][col].removeFlower();
                 tiles[row][col].setVisible(true);
                 tiles[row][col].update(plant);
@@ -416,7 +392,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Updates all tiles in the grid.
+     * Refreshes the entire grid UI.
      */
     public void updateAllTiles() {
         for (int row = 0; row < gridRows; row++) {
@@ -427,7 +403,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Refreshes tile state after watering in a zone.
+     * Applies a brief water hint to plants within the given zone and refreshes tiles.
      */
     public void animateWatering(int zoneId) {
         int zoneRow = (zoneId - 1) / 3;
@@ -452,7 +428,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Refreshes tile state after global watering.
+     * Applies a brief water hint to all plants and refreshes tiles.
      */
     public void animateAllTilesWatering() {
         for (int row = 0; row < gridRows; row++) {
@@ -468,7 +444,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Animates pesticide effect on a zone.
+     * Triggers pesticide-related visual updates for tiles in the given zone.
      */
     public void animatePesticide(int zoneId) {
         int zoneRow = (zoneId - 1) / 3;
@@ -490,7 +466,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Clears all plants from the garden.
+     * Removes all plants from the model and refreshes the grid.
      */
     private void clearGarden() {
         for (int row = 0; row < gridRows; row++) {
@@ -504,11 +480,9 @@ public class GardenGridPanel extends VBox {
     public GridPane getGardenGrid() {
         return gardenGrid;
     }
-    
-    // ============ PEST EVENT HANDLERS ============
-    
+        
     /**
-     * Handles pest spawn event - spawns pest sprite on tile.
+     * Updates the tile state in response to a pest spawn event.
      */
     public void onPestSpawned(Position position, String pestType, boolean isHarmful) {
         if (position.row() >= 0 && position.row() < gridRows && 
@@ -520,7 +494,6 @@ public class GardenGridPanel extends VBox {
                 if (isHarmful) {
                     tile.spawnPest(pestType);
                 }
-                // Beneficial insects removed - only harmful pests spawn
             } else {
                 System.err.println("[GardenGridPanel] ERROR: Cannot spawn pest - tile is null or not visible");
             }
@@ -530,7 +503,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Handles pest attack event - shows damage visual.
+     * Updates the affected tile in response to a pest attack event.
      */
     public void onPestAttack(Position position, int damage) {
         if (position.row() >= 0 && position.row() < gridRows && 
@@ -544,10 +517,9 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Handles pesticide application - animates spray effect.
+     * Clears pest state for plants in the given zone and refreshes affected tiles.
      */
     public void onPesticideApplied(edu.scu.csen275.smartgarden.model.Zone zone) {
-        // Apply to all plants in the zone
         for (var plant : zone.getPlants()) {
             if (!plant.isDead()) {
                 Position pos = plant.getPosition();
@@ -564,7 +536,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Handles pesticide application at a specific position.
+     * Clears pest state for the tile at the given position, if applicable.
      */
     public void onPesticideApplied(Position position) {
         if (position.row() >= 0 && position.row() < gridRows && 
@@ -578,7 +550,7 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Gets the tile at a specific position.
+     * Returns the tile instance for the given grid coordinates, or null if out of range.
      */
     public AnimatedTile getTileAt(int row, int col) {
         if (row >= 0 && row < gridRows && col >= 0 && col < gridCols) {

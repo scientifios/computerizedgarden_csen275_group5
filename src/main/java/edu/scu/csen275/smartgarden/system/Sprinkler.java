@@ -6,27 +6,27 @@ import edu.scu.csen275.smartgarden.util.Logger;
 import java.time.LocalDateTime;
 
 /**
- * Sprinkler device that delivers water to a zone.
+ * Zone-scoped sprinkler that applies watering events to living plants and updates zone moisture.
  */
 public class Sprinkler {
     private final Zone zone;
-    private final int flowRate; // liters per minute
+    private final int flowRate; // L/min
     private boolean isActive;
     private LocalDateTime lastActivation;
     private int activationCount;
     
     private static final Logger logger = Logger.getInstance();
-    private static final int DEFAULT_FLOW_RATE = 5; // liters per minute per plant
+    private static final int DEFAULT_FLOW_RATE = 5; // L/min per plant
     
     /**
-     * Creates a new Sprinkler for a zone.
+     * Creates a sprinkler for the given zone using the default flow rate.
      */
     public Sprinkler(Zone zone) {
         this(zone, DEFAULT_FLOW_RATE);
     }
     
     /**
-     * Creates a new Sprinkler with custom flow rate.
+     * Creates a sprinkler for the given zone with a fixed flow rate limit.
      */
     public Sprinkler(Zone zone, int flowRate) {
         this.zone = zone;
@@ -37,7 +37,7 @@ public class Sprinkler {
     }
     
     /**
-     * Activates the sprinkler.
+     * Enables watering and records the activation time.
      */
     public void activate() {
         if (!isActive) {
@@ -49,7 +49,7 @@ public class Sprinkler {
     }
     
     /**
-     * Deactivates the sprinkler.
+     * Disables watering.
      */
     public void deactivate() {
         if (isActive) {
@@ -59,7 +59,9 @@ public class Sprinkler {
     }
     
     /**
-     * Distributes water to plants in the zone.
+     * Applies a watering amount to living plants in the zone and updates zone moisture.
+     *
+     * @return total water actually applied to plants (0 if inactive)
      */
     public int distributeWater(int amount) {
         if (!isActive) {
@@ -68,20 +70,17 @@ public class Sprinkler {
         
         int waterUsed = 0;
         
-        // Water each plant in the zone
         for (Plant plant : zone.getLivingPlants()) {
             int waterForPlant = Math.min(amount / zone.getLivingPlantCount(), flowRate);
             plant.water(waterForPlant);
             waterUsed += waterForPlant;
         }
         
-        // Update zone moisture
-        zone.updateMoisture(amount / 10); // Partial absorption
+        zone.updateMoisture(amount / 10); // Simplified absorption model
         
         return waterUsed;
     }
     
-    // Getters
     public Zone getZone() {
         return zone;
     }

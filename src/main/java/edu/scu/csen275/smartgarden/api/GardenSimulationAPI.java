@@ -20,14 +20,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * GardenSimulationAPI provides an interface for automated testing and monitoring 
- * of the smart garden simulation system.
- * It exposes methods to initialize the garden, retrieve plant information, 
- * and simulate environmental conditions.
- * 
- * This API wraps smartGarden's existing systems (GardenController, WateringSystem,
- * HeatingSystem, PestControlSystem) to provide a simple programmatic interface
- * similar to Group9's API, but integrated with smartGarden's architecture.
+ * Programmatic interface for automated testing and monitoring of the garden simulation.
+ *
+ * This API provides headless control over garden initialization and environmental events
+ * (e.g., rain, temperature changes, pest infestations) while reusing the same underlying
+ * domain model and systems as the UI-driven simulation.
+ *
+ * Methods are designed to be script-friendly and to produce traceable logs for grading
+ * and long-running stability tests.
  */
 public class GardenSimulationAPI {
     private final GardenController controller;
@@ -36,20 +36,14 @@ public class GardenSimulationAPI {
     private final HeadlessSimulationEngine headlessEngine;
     private final Logger logger;
     
-    // Track day count for API compatibility (from API calls)
     private int dayCount = 0;
     
-    // Track active API instances for automatic cleanup
     private static final Set<GardenSimulationAPI> activeInstances = ConcurrentHashMap.newKeySet();
     private static volatile boolean shutdownHookRegistered = false;
     private static final Object shutdownLock = new Object();
-    
-    // Pest vulnerabilities mapping - loaded from parasites.json config file
-    // Maps plant name -> list of pest names that can attack it
     private static Map<String, List<String>> pestVulnerabilities = new HashMap<>();
     
     static {
-        // Load pest vulnerabilities from parasites.json config file
         loadPestVulnerabilitiesFromConfig();
     }
     
@@ -57,67 +51,66 @@ public class GardenSimulationAPI {
      * Loads pest vulnerabilities from parasites.json config file.
      * Creates a reverse mapping: plant name -> list of pests that can attack it.
      */
-    private static void loadPestVulnerabilitiesFromConfig() {
-        try {
-            InputStream configStream = GardenSimulationAPI.class.getResourceAsStream("/parasites.json");
-            if (configStream == null) {
-                System.err.println("[GardenSimulationAPI] WARNING: parasites.json not found, using default vulnerabilities");
-                // Fallback to hardcoded values if config not found
-                loadDefaultPestVulnerabilities();
-                return;
-            }
-            
-            String configContent = new String(configStream.readAllBytes());
-            configStream.close();
-            
-            // Parse parasites.json: extract "name" and "targetPlants" for each parasite
-            // Pattern: "name": "PestName", ... "targetPlants": ["Plant1", "Plant2", ...]
-            Pattern parasitePattern = Pattern.compile(
-                "\"name\"\\s*:\\s*\"([^\"]+)\".*?\"targetPlants\"\\s*:\\s*\\[([^\\]]+)\\]",
-                Pattern.DOTALL
-            );
-            
-            Matcher matcher = parasitePattern.matcher(configContent);
-            
-            while (matcher.find()) {
-                String parasiteName = matcher.group(1);
-                String targetPlantsStr = matcher.group(2);
-                
-                // Extract all plant names from the array
-                Pattern plantPattern = Pattern.compile("\"([^\"]+)\"");
-                Matcher plantMatcher = plantPattern.matcher(targetPlantsStr);
-                
-                while (plantMatcher.find()) {
-                    String plantName = plantMatcher.group(1);
-                    // Add reverse mapping: plant -> list of pests
-                    pestVulnerabilities.computeIfAbsent(plantName, k -> new ArrayList<>()).add(parasiteName);
-                }
-            }
-            
-            System.out.println("[GardenSimulationAPI] Loaded pest vulnerabilities from parasites.json: " + 
-                             pestVulnerabilities.size() + " plants configured");
-        } catch (Exception e) {
-            System.err.println("[GardenSimulationAPI] ERROR loading parasites.json: " + e.getMessage());
-            e.printStackTrace();
-            // Fallback to default values
+private static void loadPestVulnerabilitiesFromConfig() {
+    Logger logger = Logger.getInstance();
+    try {
+        InputStream configStream = GardenSimulationAPI.class.getResourceAsStream("/parasites.json");
+        if (configStream == null) {
+            logger.warning("API", "parasites.json not found, using default vulnerabilities");
             loadDefaultPestVulnerabilities();
+            return;
         }
+
+        String configContent = new String(configStream.readAllBytes());
+        configStream.close();
+
+        Pattern parasitePattern = Pattern.compile(
+            "\"name\"\\s*:\\s*\"([^\"]+)\".*?\"targetPlants\"\\s*:\\s*\\[([^\\]]+)\\]",
+            Pattern.DOTALL
+        );
+
+        Matcher matcher = parasitePattern.matcher(configContent);
+
+        while (matcher.find()) {
+            String parasiteName = matcher.group(1);
+            String targetPlantsStr = matcher.group(2);
+
+            Pattern plantPattern = Pattern.compile("\"([^\"]+)\"");
+            Matcher plantMatcher = plantPattern.matcher(targetPlantsStr);
+
+            while (plantMatcher.find()) {
+                String plantName = plantMatcher.group(1);
+                pestVulnerabilities
+                    .computeIfAbsent(plantName, k -> new ArrayList<>())
+                    .add(parasiteName);
+            }
+        }
+
+        logger.info("API", "Loaded pest vulnerabilities from parasites.json (" +
+                pestVulnerabilities.size() + " plants configured)");
+
+    } catch (Exception e) {
+        logger.error("API", "Failed to load parasites.json: " + e.getMessage());
+        loadDefaultPestVulnerabilities();
     }
+}
     
     /**
      * Fallback method to load default pest vulnerabilities if config file fails.
      */
-    private static void loadDefaultPestVulnerabilities() {
-        pestVulnerabilities.put("Strawberry", Arrays.asList("Red Mite", "Green Leaf Worm"));
-        pestVulnerabilities.put("Grapevine", Arrays.asList("Black Beetle", "Red Mite"));
-        pestVulnerabilities.put("Apple Sapling", Arrays.asList("Brown Caterpillar", "Green Leaf Worm"));
-        pestVulnerabilities.put("Carrot", Arrays.asList("Red Mite", "Brown Caterpillar"));
-        pestVulnerabilities.put("Tomato", Arrays.asList("Black Beetle", "Red Mite"));
-        pestVulnerabilities.put("Onion", Arrays.asList("Green Leaf Worm"));
-        pestVulnerabilities.put("Sunflower", Arrays.asList("Red Mite", "Brown Caterpillar"));
-        pestVulnerabilities.put("Tulip", Arrays.asList("Green Leaf Worm"));
-        pestVulnerabilities.put("Rose", Arrays.asList("Black Beetle", "Red Mite"));
-    }
+private static void loadDefaultPestVulnerabilities() {
+    pestVulnerabilities.put("Strawberry", Arrays.asList("Red Mite", "Green Leaf Worm"));
+    pestVulnerabilities.put("Apple", Arrays.asList("Brown Caterpillar", "Green Leaf Worm"));
+    pestVulnerabilities.put("Cherry", Arrays.asList("Black Beetle", "Red Mite"));
+
+    pestVulnerabilities.put("Cabbage", Arrays.asList("Green Leaf Worm", "Brown Caterpillar"));
+    pestVulnerabilities.put("Scallion", Arrays.asList("Red Mite"));
+    pestVulnerabilities.put("Tomato", Arrays.asList("Black Beetle", "Red Mite"));
+
+    pestVulnerabilities.put("Daisy", Arrays.asList("Red Mite"));
+    pestVulnerabilities.put("Lily", Arrays.asList("Green Leaf Worm"));
+    pestVulnerabilities.put("Peony", Arrays.asList("Black Beetle"));
+}
     
     /**
      * Creates a new GardenSimulationAPI with default settings.
@@ -143,9 +136,6 @@ public class GardenSimulationAPI {
         this.garden = controller.getGarden();
         this.engine = controller.getSimulationEngine();
         this.logger = Logger.getInstance();
-        
-        // Create headless engine that shares the same systems as SimulationEngine
-        // This allows both UI and API to work with the same garden state
         this.headlessEngine = new HeadlessSimulationEngine(
             garden,
             engine.getWateringSystem(),
@@ -162,30 +152,28 @@ public class GardenSimulationAPI {
     }
     
     /**
-     * Initializes the garden with a predefined set of plants from config file.
-     * This method marks the beginning of the simulation clock.
-     * Reads plant configuration from garden-config.json in resources.
-     */
+    * Initializes the garden state and enables API-driven simulation mode.
+    * Loads initial plants from a configuration resource (if available),
+    * enables API mode for relevant subsystems, and starts the headless
+    * simulation loop.
+    */
     public void initializeGarden() {
-        // Enable dual logging - all logs will go to both logs/garden_*.log AND log.txt
         Logger.enableApiLogging(Paths.get("log.txt"));
         
-        // Register shutdown hook for automatic cleanup (only once)
         registerShutdownHook();
         
         logger.info("API", "Initializing garden - Day 0 begins");
         dayCount = 0;
         
-        // Load plants from config file
         try {
             InputStream configStream = getClass().getResourceAsStream("/garden-config.json");
             if (configStream == null) {
                 logger.warning("API", "Config file not found, using default plants");
                 // Fallback to default plants if config not found
                 addPlants(PlantType.STRAWBERRY, new Position(1, 1));
-                addPlants(PlantType.CARROT, new Position(2, 2));
+                addPlants(PlantType.CABBAGE, new Position(2, 2));
                 addPlants(PlantType.TOMATO, new Position(3, 3));
-                addPlants(PlantType.SUNFLOWER, new Position(4, 4));
+                addPlants(PlantType.LILY, new Position(4, 4));
             } else {
                 String configContent = new String(configStream.readAllBytes());
                 configStream.close();
@@ -195,23 +183,17 @@ public class GardenSimulationAPI {
             logger.error("API", "Error loading config file: " + e.getMessage());
             // Fallback to default plants
             addPlants(PlantType.STRAWBERRY, new Position(1, 1));
-            addPlants(PlantType.CARROT, new Position(2, 2));
+            addPlants(PlantType.CABBAGE, new Position(2, 2));
             addPlants(PlantType.TOMATO, new Position(3, 3));
-            addPlants(PlantType.SUNFLOWER, new Position(4, 4));
+            addPlants(PlantType.LILY, new Position(4, 4));
         }
         
         logger.info("API", "Garden initialized with " + garden.getTotalPlants() + " plants.");
-        
-        // Enable API mode - disable automatic pest spawning and weather changes
-        // Pests and weather will only be triggered via API calls
-        // All other automatic systems (pesticide, heating, cooling, sprinklers, water decrease) continue to work
         engine.getPestControlSystem().setApiModeEnabled(true);
         engine.getWeatherSystem().setApiModeEnabled(true);
         engine.getHeatingSystem().setApiModeEnabled(true);
         engine.getCoolingSystem().setApiModeEnabled(true);
         
-        // Start headless simulation for continuous plant updates
-        // This enables true 24-hour survival testing
         startHeadlessSimulation();
     }
     
@@ -227,13 +209,13 @@ public class GardenSimulationAPI {
     }
     
     /**
-     * Retrieves plant information including names, water requirements, and pest vulnerabilities.
-     * 
-     * @return Map containing:
-     *         - "plants": List of plant names
-     *         - "waterRequirement": List of water requirement amounts (not current levels)
-     *         - "parasites": List of lists of pest types that can attack each plant
-     */
+    * Returns plant metadata for external scripts.
+     *
+    * @return a map containing:
+    *         "plants"           -> List<String> plant display types,
+    *         "waterRequirement" -> List<Integer> required water amounts,
+    *         "parasites"        -> List<List<String>> pests that can target each plant
+    */
     public Map<String, Object> getPlants() {
         Map<String, Object> plantInfo = new HashMap<>();
         List<String> plantNames = new ArrayList<>();
@@ -243,9 +225,8 @@ public class GardenSimulationAPI {
         for (Plant plant : garden.getLivingPlants()) {
             String plantType = plant.getPlantType();
             plantNames.add(plantType);
-            waterRequirements.add(plant.getWaterRequirement()); // Fixed: return requirement, not current level
+            waterRequirements.add(plant.getWaterRequirement());
             
-            // Handle Flower type format "Flower (Sunflower)" -> extract "Sunflower"
             String lookupKey = plantType;
             if (plantType.startsWith("Flower (")) {
                 lookupKey = plantType.substring(8, plantType.length() - 1); // Extract "Sunflower" from "Flower (Sunflower)"
@@ -262,19 +243,16 @@ public class GardenSimulationAPI {
     }
     
     /**
-     * Simulates rainfall in the garden by adjusting water levels for all plants.
-     * This uses smartGarden's WateringSystem and WeatherSystem.
-     * 
-     * @param amount Amount of water units to add
-     */
+    * Simulates a rainfall event.
+     *
+    * @param amount water units added to each living plant
+    */
     public void rain(int amount) {
         logger.info("API", "Rainfall event: " + amount + " units");
         
-        // Set weather to rainy
         WeatherSystem weatherSystem = engine.getWeatherSystem();
         weatherSystem.setWeather(WeatherSystem.Weather.RAINY);
         
-        // Add water to all plants and apply weather effects
         for (Plant plant : garden.getAllPlants()) {
             if (!plant.isDead()) {
                 plant.water(amount);
@@ -284,26 +262,23 @@ public class GardenSimulationAPI {
             }
         }
         
-        // Trigger system updates (sprinklers will stop due to rain listener)
         triggerSystemUpdates();
         
         dayCount++;
     }
     
     /**
-     * Simulates temperature changes in the garden.
-     * This uses smartGarden's HeatingSystem.
-     * 
-     * @param temp Temperature in Fahrenheit (specification requirement: 40-120 F)
-     */
+    * Simulates an ambient temperature change.
+    *
+    * @param temp temperature in Fahrenheit (clamped to the valid range if necessary)
+    *             Weather is not modified by this method in API mode.
+    */
     public void temperature(int temp) {
-        // Validate temperature range (40-120 F as per specification)
         if (temp < 40 || temp > 120) {
             logger.warning("API", "Temperature " + temp + "°F is outside valid range (40-120°F). Clamping to valid range.");
             temp = Math.max(40, Math.min(120, temp));
         }
         
-        // Convert Fahrenheit to Celsius (spec expects Fahrenheit input)
         double tempCelsius = (temp - 32) * 5.0 / 9.0;
         int tempCelsiusInt = (int) Math.round(tempCelsius);
         
@@ -312,40 +287,32 @@ public class GardenSimulationAPI {
         HeatingSystem heatingSystem = engine.getHeatingSystem();
         CoolingSystem coolingSystem = engine.getCoolingSystem();
         
-        // Set ambient temperature - this updates all zones
         heatingSystem.setAmbientTemperature(tempCelsiusInt);
         coolingSystem.setAmbientTemperature(tempCelsiusInt);
         
-        // Apply temperature effects to all plants (using Celsius internally)
-        // NOTE: Weather is NOT changed by temperature - weather only changes via api.rain()
         // In API mode, weather changes must be explicit API calls, not automatic based on temperature
         for (Plant plant : garden.getAllPlants()) {
             if (!plant.isDead()) {
                 plant.applyTemperatureEffect(tempCelsiusInt);
-                // Don't apply weather effects - weather only changes via explicit api.rain() call
                 logger.info("API", plant.getPlantType() + " temperature adjusted to " + temp + "°F (" + tempCelsiusInt + "°C)");
             }
         }
         
-        // Trigger system updates (heating will activate if temp is low, cooling if temp is high)
         triggerSystemUpdates();
         
         dayCount++;
     }
     
     /**
-     * Triggers a parasite (pest) infestation based on plant vulnerabilities.
-     * This uses smartGarden's PestControlSystem.
-     * 
-     * @param parasiteType Type of pest (e.g., "Red Mite", "Green Leaf Worm", etc.) - case-insensitive
-     */
+    * Simulates a pest infestation event.
+     *
+    * @param parasiteType pest type name (case-insensitive)
+    */
     public void parasite(String parasiteType) {
         logger.info("API", "Parasite infestation: " + parasiteType);
         
-        // Normalize input for case-insensitive matching
         String normalizedParasiteType = parasiteType.toLowerCase();
         
-        // Find all plants that are vulnerable to this pest type
         for (Plant plant : garden.getAllPlants()) {
             if (plant.isDead()) {
                 continue;
@@ -359,7 +326,6 @@ public class GardenSimulationAPI {
             }
             List<String> vulnerabilities = pestVulnerabilities.getOrDefault(lookupKey, new ArrayList<>());
             
-            // Case-insensitive matching: find matching parasite name from vulnerabilities list
             String matchedParasiteName = null;
             for (String vulnerability : vulnerabilities) {
                 if (vulnerability.toLowerCase().equals(normalizedParasiteType)) {
@@ -369,7 +335,6 @@ public class GardenSimulationAPI {
             }
             
             if (matchedParasiteName != null) {
-                // Create a pest at the plant's position and attack it
                 // Use the original name from config to ensure consistency
                 HarmfulPest pest = new HarmfulPest(matchedParasiteName, plant.getPosition());
                 pest.causeDamage(plant);
@@ -383,16 +348,14 @@ public class GardenSimulationAPI {
             }
         }
         
-        // Trigger system updates (pesticide will be applied automatically)
         triggerSystemUpdates();
         
         dayCount++;
     }
     
     /**
-     * Logs details about the garden's current state, including plant health and status.
-     * Uses smartGarden's Garden.getStatistics() method.
-     */
+    * Logs a snapshot report of the current garden state.
+    */
     public void getState() {
         logger.info("API", "Garden State Report - Day " + dayCount);
         
@@ -404,7 +367,6 @@ public class GardenSimulationAPI {
         logger.info("API", "Total Plants: " + stats.getOrDefault("totalPlants", 0));
         logger.info("API", "Zones: " + stats.getOrDefault("zones", 0));
         
-        // Log individual plant status
         for (Plant plant : garden.getAllPlants()) {
             String status = plant.isDead() ? "DEAD" : "ALIVE";
             String plantStatus = "  - " + plant.getPlantType() + " at " + plant.getPosition() + 
@@ -436,12 +398,8 @@ public class GardenSimulationAPI {
     }
     
     /**
-     * Starts the headless simulation loop for continuous plant updates.
-     * This enables true 24-hour survival testing where plants update automatically,
-     * water decreases over time, and systems respond continuously.
-     * 
-     * Called automatically by initializeGarden(), but can be called manually if needed.
-     */
+    * Starts the headless simulation loop if not already running.
+    */
     public void startHeadlessSimulation() {
         if (headlessEngine.isRunning()) {
             logger.warning("API", "Headless simulation already running");
@@ -457,10 +415,8 @@ public class GardenSimulationAPI {
     }
     
     /**
-     * Registers a JVM shutdown hook to automatically clean up resources.
-     * This ensures cleanup happens even if the script doesn't explicitly call cleanup methods.
-     * Only registers once for all API instances.
-     */
+    * Registers a JVM shutdown hook to stop active headless simulations and close API logging.
+    */
     private static void registerShutdownHook() {
         synchronized (shutdownLock) {
             if (shutdownHookRegistered) {
@@ -517,18 +473,14 @@ public class GardenSimulationAPI {
     }
     
     /**
-     * Triggers all system updates to respond to API state changes.
-     * This ensures automatic systems (watering, heating, pest control) work after API calls.
-     * Systems are idempotent and safe to call multiple times.
-     * All system responses are logged automatically by the systems themselves.
-     */
+    * Invokes all automatic subsystems after an API-triggered state change.
+    */
     private void triggerSystemUpdates() {
         HeatingSystem heatingSystem = engine.getHeatingSystem();
         CoolingSystem coolingSystem = engine.getCoolingSystem();
         WateringSystem wateringSystem = engine.getWateringSystem();
         PestControlSystem pestSystem = engine.getPestControlSystem();
         
-        // Systems automatically log all their actions - just call update()
         heatingSystem.update();
         coolingSystem.update();
         wateringSystem.checkAndWater();
@@ -543,15 +495,8 @@ public class GardenSimulationAPI {
         Logger.disableApiLogging();
     }
     
-    /**
-     * Parses the JSON config file and loads plants into the garden.
-     * Simple JSON parser for the specific config format.
-     * 
-     * @param configContent The JSON content as a string
-     */
     private void loadPlantsFromConfig(String configContent) {
-        // Simple regex-based parser for the specific JSON structure
-        // Pattern: "type": "PlantName", "position": {"row": X, "column": Y}
+        // Regex-based loader for the expected garden-config.json structure.
         Pattern plantPattern = Pattern.compile(
             "\"type\"\\s*:\\s*\"([^\"]+)\".*?\"row\"\\s*:\\s*(\\d+).*?\"column\"\\s*:\\s*(\\d+)",
             Pattern.DOTALL
@@ -578,9 +523,9 @@ public class GardenSimulationAPI {
         if (plantCount == 0) {
             logger.warning("API", "No plants loaded from config, using defaults");
             addPlants(PlantType.STRAWBERRY, new Position(1, 1));
-            addPlants(PlantType.CARROT, new Position(2, 2));
+            addPlants(PlantType.CABBAGE, new Position(2, 2));
             addPlants(PlantType.TOMATO, new Position(3, 3));
-            addPlants(PlantType.SUNFLOWER, new Position(4, 4));
+            addPlants(PlantType.LILY, new Position(4, 4));
         }
     }
     
@@ -593,14 +538,14 @@ public class GardenSimulationAPI {
     private PlantType mapPlantTypeName(String plantTypeName) {
         return switch (plantTypeName) {
             case "Strawberry" -> PlantType.STRAWBERRY;
-            case "Grapevine" -> PlantType.GRAPEVINE;
+            case "Cherry" -> PlantType.CHERRY;
             case "Apple Sapling", "Apple" -> PlantType.APPLE;
-            case "Carrot" -> PlantType.CARROT;
+            case "Cabbage" -> PlantType.CABBAGE;
             case "Tomato" -> PlantType.TOMATO;
-            case "Onion" -> PlantType.ONION;
-            case "Sunflower" -> PlantType.SUNFLOWER;
-            case "Tulip" -> PlantType.TULIP;
-            case "Rose" -> PlantType.ROSE;
+            case "Scallion" -> PlantType.SCALLION;
+            case "Lily" -> PlantType.LILY;
+            case "Daisy" -> PlantType.DAISY;
+            case "Peony" -> PlantType.PEONY;
             default -> null;
         };
     }

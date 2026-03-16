@@ -11,77 +11,63 @@ import javafx.util.Duration;
 import java.util.Random;
 
 /**
- * Simulates dynamic weather conditions that affect plant growth.
+ * Weather state machine + effects (moisture/temperature).
+ * Supports API override and optional real-time rotation mode.
  */
 public class WeatherSystem {
     private final Garden garden;
     private final HeatingSystem heatingSystem;
-    private final CoolingSystem coolingSystem; // Optional - can be null
+    private final CoolingSystem coolingSystem; // optional (may be null)
     private final ObjectProperty<Weather> currentWeather;
-    private Weather previousWeather; // Track previous weather to detect changes
-    private int weatherDuration; // minutes
+    private Weather previousWeather;
+    private int weatherDuration;
     private final Random random;
-    private boolean rainTestMode = false; // TEST MODE: Force rain every minute
-    private boolean rotateSunnyRainyMode = false; // Rotate between sunny and rainy every minute
-    private boolean apiModeEnabled = false; // When enabled, automatic weather changes are disabled
-    private Timeline realTimeRotationTimer; // Timer for real-world time rotation
+    private boolean rainTestMode = false; 
+    private boolean rotateSunnyRainyMode = false; 
+    private boolean apiModeEnabled = false; // disables automatic weather changes
+    private Timeline realTimeRotationTimer; // real-time rotation (not sim ticks)
     
     private static final Logger logger = Logger.getInstance();
     private static final int MIN_WEATHER_DURATION = 30; // minutes
     private static final int MAX_WEATHER_DURATION = 120; // minutes
     
-    /**
-     * Creates a new WeatherSystem for the garden.
-     */
     public WeatherSystem(Garden garden, HeatingSystem heatingSystem) {
         this(garden, heatingSystem, null);
     }
     
-    /**
-     * Creates a new WeatherSystem for the garden with cooling system support.
-     */
     public WeatherSystem(Garden garden, HeatingSystem heatingSystem, CoolingSystem coolingSystem) {
         this.garden = garden;
         this.heatingSystem = heatingSystem;
         this.coolingSystem = coolingSystem;
         this.currentWeather = new SimpleObjectProperty<>(Weather.SUNNY);
-        this.previousWeather = Weather.SUNNY; // Initialize previous weather
+        this.previousWeather = Weather.SUNNY;
         this.weatherDuration = 60;
         this.random = new Random();
         
         logger.info("Weather", "Weather system initialized. Current: " + Weather.SUNNY);
         
-        // Set initial temperature based on initial weather
         applyTemperatureForWeather(Weather.SUNNY);
     }
     
-    /**
-     * Sets whether API mode is enabled.
-     * When enabled, automatic weather changes are disabled (weather only via API calls).
-     * Weather effects (like rain watering plants) still apply normally.
-     */
+    /** Enables API override: disables automatic weather changes (effects still apply). */
     public void setApiModeEnabled(boolean enabled) {
         this.apiModeEnabled = enabled;
         
-        // When enabling API mode, stop rotation timer (if running)
-        // This prevents automatic weather changes from rotation timer
+        // API mode disables real-time rotation.
         if (enabled) {
             if (realTimeRotationTimer != null) {
                 realTimeRotationTimer.stop();
                 realTimeRotationTimer = null;
             }
-            rotateSunnyRainyMode = false; // Also disable rotation flag
+            rotateSunnyRainyMode = false;
         } else {
-            // If disabling API mode and rotation was enabled, disable rotation
+            // Leaving API mode: ensure rotation mode is off.
             if (rotateSunnyRainyMode) {
                 disableSunnyRainyRotation();
             }
         }
     }
     
-    /**
-     * Checks if API mode is enabled.
-     */
     public boolean isApiModeEnabled() {
         return apiModeEnabled;
     }
@@ -114,13 +100,8 @@ public class WeatherSystem {
         }
     }
     
-    /**
-     * Updates weather system each simulation tick.
-     * Note: In rotation mode, weather changes are handled by real-time timer, not simulation ticks.
-     */
+    /** Per-tick update. Auto-change is skipped in API mode and real-time rotation mode. */
     public void update() {
-        // Skip weather duration countdown in rotation mode OR API mode
-        // In API mode, weather changes only happen via API calls (rain(), temperature())
         if (!rotateSunnyRainyMode && !apiModeEnabled) {
             weatherDuration--;
             
@@ -132,65 +113,50 @@ public class WeatherSystem {
         //     changeWeather();
         // }
         
-        // Apply weather effects - rain should water plants continuously
         if (currentWeather.get() == Weather.RAINY) {
-            // When raining, water plants every tick (every minute)
             applyWeatherEffects();
         } else {
-            // For other weather, apply effects periodically (every 10 minutes)
             if (!rotateSunnyRainyMode && weatherDuration % 10 == 0) {
                 applyWeatherEffects();
             }
         }
     }
     
-    /**
-     * TEST MODE: Forces rain every 1 minute for testing purposes.
-     * Call this method to enable test mode.
-     */
+    /** Test helper: forces RAINY weather each sim minute. */
     public void enableRainTestMode() {
         rainTestMode = true;
-        rotateSunnyRainyMode = false; // Disable rotation mode
-        // Force rain immediately
+        rotateSunnyRainyMode = false;
         applyTemperatureForWeather(Weather.RAINY);
         previousWeather = currentWeather.get();
         currentWeather.set(Weather.RAINY);
         garden.setWeather(Weather.RAINY.name());
         weatherDuration = 1; // 1 minute duration
-        logger.info("Weather", "TEST MODE ENABLED: Rain will occur every 1 minute for testing");
+        logger.info("Weather", "Rain test mode enabled");
     }
     
-    /**
-     * Disables rain test mode and returns to normal weather behavior.
-     */
+    /** Exits rain test mode. */
     public void disableRainTestMode() {
         rainTestMode = false;
         rotateSunnyRainyMode = false;
-        logger.info("Weather", "TEST MODE DISABLED: Returning to normal weather behavior");
+        logger.info("Weather", "Rain test mode disabled");
     }
     
-    /**
-     * Enables rotation between SUNNY, RAINY, and SNOWY every 1 REAL minute (60 seconds).
-     */
+    /** Real-time rotation: SUNNY → RAINY → SNOWY every 60 seconds. */
     public void enableSunnyRainyRotation() {
         rotateSunnyRainyMode = true;
         rainTestMode = false; // Disable rain-only test mode
-        // Start with sunny
         applyTemperatureForWeather(Weather.SUNNY);
         previousWeather = currentWeather.get();
         currentWeather.set(Weather.SUNNY);
         garden.setWeather(Weather.SUNNY.name());
         weatherDuration = 1; // Keep for display purposes
         
-        // Stop any existing timer
         if (realTimeRotationTimer != null) {
             realTimeRotationTimer.stop();
         }
         
-        // Create real-time timer that rotates weather every 60 seconds (1 actual minute)
         realTimeRotationTimer = new Timeline(
             new KeyFrame(Duration.seconds(60), e -> {
-                // Rotate weather every 60 seconds: SUNNY → RAINY → SNOWY → SUNNY
                 Weather current = currentWeather.get();
                 Weather newWeather;
                 if (current == Weather.SUNNY) {
@@ -201,7 +167,6 @@ public class WeatherSystem {
                     newWeather = Weather.SUNNY;
                 }
                 
-                // Set temperature for the new weather
                 applyTemperatureForWeather(newWeather);
                 
                 previousWeather = current;
@@ -214,29 +179,24 @@ public class WeatherSystem {
         realTimeRotationTimer.setCycleCount(Timeline.INDEFINITE);
         realTimeRotationTimer.play();
         
-        logger.info("Weather", "REAL-TIME ROTATION MODE ENABLED: Weather will rotate between SUNNY → RAINY → SNOWY every 1 actual minute (60 seconds)");
+        logger.info("Weather", "Real-time rotation enabled (SUNNY→RAINY→SNOWY)");
     }
     
-    /**
-     * Disables sunny/rainy rotation mode.
-     */
+    /** Disables real-time rotation mode. */
     public void disableSunnyRainyRotation() {
         rotateSunnyRainyMode = false;
         if (realTimeRotationTimer != null) {
             realTimeRotationTimer.stop();
             realTimeRotationTimer = null;
         }
-        logger.info("Weather", "ROTATION MODE DISABLED: Returning to normal weather behavior");
+        logger.info("Weather", "Real-time rotation disabled");
     }
     
-    /**
-     * Changes to a new weather condition.
-     */
+    // Select next weather based on mode (rotation/test/random)
     private void changeWeather() {
         Weather oldWeather = currentWeather.get();
         Weather newWeather;
         
-        // ROTATION MODE: Rotate between SUNNY, RAINY, and SNOWY
         if (rotateSunnyRainyMode) {
             Weather current = oldWeather;
             if (current == Weather.SUNNY) {
@@ -250,7 +210,6 @@ public class WeatherSystem {
             logger.info("Weather", "ROTATION MODE: Weather changed from " + oldWeather + " to " + 
                        newWeather + " (Duration: 1 min)");
         }
-        // TEST MODE: Force rain every minute
         else if (rainTestMode) {
             newWeather = Weather.RAINY;
             weatherDuration = 1; // 1 minute
@@ -273,18 +232,13 @@ public class WeatherSystem {
         garden.setWeather(newWeather.name());
     }
     
-    /**
-     * Sets temperature based on weather type and activates/deactivates heating accordingly.
-     */
+    /** Applies ambient temperature for weather unless API override is enabled. */
     private void applyTemperatureForWeather(Weather weather) {
         if (heatingSystem == null) {
             return;
         }
-        
-        // In API mode, don't automatically change temperature with weather
-        // Temperature should only be controlled via api.temperature() calls
         if (apiModeEnabled) {
-            return; // Skip temperature changes in API mode
+            return; // API override: temperature controlled externally
         }
         
         int targetTemp;
@@ -297,10 +251,9 @@ public class WeatherSystem {
             if (!apiModeEnabled) {
                 logger.info("Weather", "SUNNY weather: Temperature set to " + targetTemp + "°C");
             }
-            // Turn off heating when sunny (temp >= 17°C threshold)
-            heatingSystem.update(); // This will deactivate heating
+            heatingSystem.update();
             if (coolingSystem != null) {
-                coolingSystem.update(); // Check if cooling needed
+                coolingSystem.update();
             }
         } else if (weather == Weather.RAINY) {
             targetTemp = 10;
@@ -311,10 +264,9 @@ public class WeatherSystem {
             if (!apiModeEnabled) {
                 logger.info("Weather", "RAINY weather: Temperature set to " + targetTemp + "°C");
             }
-            // Heating will activate (temp < 15°C, deficit = 5 = LOW mode)
             heatingSystem.update();
             if (coolingSystem != null) {
-                coolingSystem.update(); // Cooling should be off at 10°C
+                coolingSystem.update();
             }
         } else if (weather == Weather.SNOWY) {
             targetTemp = 5;
@@ -325,21 +277,16 @@ public class WeatherSystem {
             if (!apiModeEnabled) {
                 logger.info("Weather", "SNOWY weather: Temperature set to " + targetTemp + "°C");
             }
-            // Heating will activate (temp < 15°C, deficit > 10 = HIGH mode)
             heatingSystem.update();
             if (coolingSystem != null) {
-                coolingSystem.update(); // Cooling should be off at 5°C
+                coolingSystem.update();
             }
         }
     }
     
-    /**
-     * Generates the next weather based on current conditions.
-     */
     private Weather generateNextWeather(Weather current) {
         double rand = random.nextDouble();
         
-        // Weather transitions with realistic probabilities
         return switch (current) {
             case SUNNY -> {
                 if (rand < 0.6) yield Weather.SUNNY;      // Stay sunny
@@ -371,9 +318,6 @@ public class WeatherSystem {
         };
     }
     
-    /**
-     * Applies current weather effects to all plants.
-     */
     private void applyWeatherEffects() {
         for (Plant plant : garden.getLivingPlants()) {
             plant.applyWeatherEffect(currentWeather.get().name());
@@ -385,15 +329,9 @@ public class WeatherSystem {
         } else if (currentWeather.get() == Weather.SUNNY) {
             garden.getZones().forEach(zone -> zone.evaporate(2));
         }
-        
-        // Temperature is set immediately on weather change in changeWeather()
-        // Heating system will gradually increase temperature from the set point to 15°C
-        // No continuous temperature changes here - only moisture effects
     }
     
-    /**
-     * Manually sets weather (for testing).
-     */
+    /** Forces weather immediately (used by UI/API/test paths). */
     public void setWeather(Weather weather) {
         if (currentWeather.get() != weather) {
             applyTemperatureForWeather(weather);
@@ -415,9 +353,6 @@ public class WeatherSystem {
     //     }
     // }
     
-    /**
-     * Gets weather forecast (next expected weather).
-     */
     public Weather getForecast() {
         return generateNextWeather(currentWeather.get());
     }
@@ -436,9 +371,6 @@ public class WeatherSystem {
         return weatherDuration;
     }
     
-    /**
-     * Weather enumeration.
-     */
     public enum Weather {
         SUNNY("☀", "Sunny"),
         CLOUDY("☁", "Cloudy"),

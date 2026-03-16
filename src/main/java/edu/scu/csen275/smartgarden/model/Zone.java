@@ -5,8 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a zone in the garden.
- * A zone is a logical grouping of grid cells for management purposes.
+ * Represents a management zone within the garden grid.
+ *
+ * A Zone groups a set of grid cells (stored as an explicit list of {@link Position}s)
+ * and tracks zone-level conditions such as moisture, temperature, and pest pressure.
+ * It also maintains the set of plants currently located within the zone for queries
+ * used by the simulation and UI.
  */
 public class Zone {
     private final int zoneId;
@@ -17,9 +21,6 @@ public class Zone {
     private final IntegerProperty temperature;
     private final IntegerProperty pestInfestationLevel;
     
-    /**
-     * Creates a new Zone.
-     */
     public Zone(int zoneId, List<Position> boundaries) {
         this.zoneId = zoneId;
         this.boundaries = new ArrayList<>(boundaries);
@@ -29,32 +30,23 @@ public class Zone {
         this.pestInfestationLevel = new SimpleIntegerProperty(0);
     }
     
-    /**
-     * Checks if a position is within this zone.
-     */
     public boolean containsPosition(Position position) {
         return boundaries.contains(position);
     }
     
-    /**
-     * Adds a plant to this zone.
-     */
     public void addPlant(Plant plant) {
         if (!plantsInZone.contains(plant)) {
             plantsInZone.add(plant);
         }
     }
     
-    /**
-     * Removes a plant from this zone.
-     */
     public void removePlant(Plant plant) {
         plantsInZone.remove(plant);
     }
     
     /**
-     * Gets plants that need water.
-     */
+    * Returns living plants whose water level is below their water requirement.
+    */
     public List<Plant> getPlantsNeedingWater() {
         return plantsInZone.stream()
             .filter(p -> !p.isDead())
@@ -62,44 +54,28 @@ public class Zone {
             .toList();
     }
     
-    /**
-     * Gets all living plants in this zone.
-     */
     public List<Plant> getLivingPlants() {
         return plantsInZone.stream()
             .filter(p -> !p.isDead())
             .toList();
     }
-    
-    /**
-     * Updates zone moisture level.
-     */
+
     public void updateMoisture(int amount) {
         moistureLevel.set(Math.max(0, Math.min(100, moistureLevel.get() + amount)));
     }
     
-    /**
-     * Updates zone temperature.
-     */
     public void setTemperature(int newTemp) {
         temperature.set(newTemp);
     }
     
-    /**
-     * Updates pest infestation level.
-     */
     public void updatePestLevel(int level) {
         pestInfestationLevel.set(Math.max(0, Math.min(100, level)));
     }
     
-    /**
-     * Decreases moisture naturally over time.
-     */
     public void evaporate(int amount) {
         updateMoisture(-amount);
     }
     
-    // Getters
     public int getZoneId() {
         return zoneId;
     }
@@ -119,8 +95,7 @@ public class Zone {
     public int getLivingPlantCount() {
         return (int) plantsInZone.stream().filter(p -> !p.isDead()).count();
     }
-    
-    // Property getters
+
     public IntegerProperty moistureLevelProperty() {
         return moistureLevel;
     }

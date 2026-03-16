@@ -1,7 +1,7 @@
 package edu.scu.csen275.smartgarden.model;
 
 /**
- * Categories for grouping plants in the UI.
+ * Defines high-level plant categories used for UI grouping and filtering.
  */
 public enum PlantCategory {
     FRUIT,

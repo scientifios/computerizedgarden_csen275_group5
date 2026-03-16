@@ -10,28 +10,28 @@ import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
 /**
- * Floating text animation for damage and healing indicators.
- * Shows "-2 HP", "+3 health", "Plant Saved!" etc.
+ * Utility for displaying short-lived floating text overlays on a pane.
+ * Common uses include status deltas and brief notifications.
  */
 public class DamageTextAnimation {
-    private static final Duration ANIMATION_DURATION = Duration.millis(2500); // Increased from 1500ms to 2500ms for better visibility
+    private static final Duration ANIMATION_DURATION = Duration.millis(2500); 
     
     /**
-     * Creates floating damage text (e.g., "-2 HP").
+     * Shows a floating negative HP label at the given position.
      */
     public static void createDamageText(Pane container, double x, double y, int damage) {
         createText(container, "-" + damage + " HP", Color.rgb(255, 51, 51), x, y);
     }
     
     /**
-     * Creates floating healing text (e.g., "+3 health").
+     * Shows a floating positive heal label at the given position.
      */
     public static void createHealingText(Pane container, double x, double y, int healing) {
         createText(container, "+" + healing + " health", Color.rgb(51, 255, 51), x, y);
     }
     
     /**
-     * Creates custom floating text (e.g., "Plant Saved!").
+     * Displays a floating text label with the given styling and animation.
      */
     public static void createText(Pane container, String text, Color color, double x, double y) {
         Label textLabel = new Label(text);
@@ -42,7 +42,6 @@ public class DamageTextAnimation {
             "-fx-background-color: transparent;"
         );
         
-        // Drop shadow for better visibility
         DropShadow shadow = new DropShadow();
         shadow.setColor(Color.color(0, 0, 0, 0.8));
         shadow.setRadius(3);
@@ -50,17 +49,15 @@ public class DamageTextAnimation {
         shadow.setOffsetY(1);
         textLabel.setEffect(shadow);
         
-        // Position at center of tile
         textLabel.setLayoutX(x - 30);
         textLabel.setLayoutY(y - 10);
         textLabel.setAlignment(Pos.CENTER);
         
         container.getChildren().add(textLabel);
         
-        // Animate floating up and fading out
         TranslateTransition floatUp = new TranslateTransition(ANIMATION_DURATION, textLabel);
         floatUp.setFromY(0);
-        floatUp.setToY(-40); // Float up
+        floatUp.setToY(-40);
         
         FadeTransition fadeOut = new FadeTransition(ANIMATION_DURATION, textLabel);
         fadeOut.setFromValue(1.0);
@@ -78,7 +75,7 @@ public class DamageTextAnimation {
     }
     
     /**
-     * Converts Color to hex string for CSS.
+     * Formats a JavaFX Color as a CSS hex string.
      */
     private static String toHexString(Color color) {
         int r = (int) (color.getRed() * 255);

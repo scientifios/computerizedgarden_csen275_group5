@@ -1,8 +1,14 @@
 package edu.scu.csen275.smartgarden.model;
 
 /**
- * Represents a flowering plant in the garden.
- * Flowers have moderate growth rates and low water requirements.
+ * Concrete implementation of {@link Plant} representing a flowering plant.
+ *
+ * A Flower has moderate growth rate, low water requirements,
+ * and a defined temperature tolerance range. Each flower
+ * is characterized by its bloom color and a fixed growth duration.
+ *
+ * This class encapsulates flower-specific properties while
+ * leveraging the common lifecycle behavior defined in Plant.
  */
 public class Flower extends Plant {
     private static final int DEFAULT_LIFESPAN = 90; // days

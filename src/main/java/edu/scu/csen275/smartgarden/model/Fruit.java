@@ -1,8 +1,14 @@
 package edu.scu.csen275.smartgarden.model;
 
 /**
- * Represents a fruit plant in the garden.
- * Fruits have moderate growth rates and moderate water requirements.
+ * Concrete implementation of {@link Plant} representing a fruit-bearing plant.
+ *
+ * A Fruit has moderate growth rate, moderate water requirements,
+ * and a defined temperature tolerance range. Each fruit plant
+ * is characterized by its specific fruit type and a fixed growth duration.
+ *
+ * This class encapsulates fruit-specific properties while
+ * leveraging the common lifecycle behavior defined in Plant.
  */
 public class Fruit extends Plant {
     private static final int DEFAULT_LIFESPAN = 90; // days

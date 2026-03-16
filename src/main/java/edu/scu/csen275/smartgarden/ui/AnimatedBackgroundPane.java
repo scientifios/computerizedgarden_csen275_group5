@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Static background pane with sky gradient, sun, and clouds.
- * No background animations.
+ * Renders a simple, non-animated sky background (gradient + optional sun + static clouds).
+ * The canvas resizes with the pane and triggers a redraw on size changes or weather updates.
  */
 public class AnimatedBackgroundPane extends Pane {
     private final Canvas backgroundCanvas;
@@ -188,18 +188,14 @@ public class AnimatedBackgroundPane extends Pane {
         double angle, opacity, width;
     }
 
-    /**
-     * Updates background by weather and redraws once.
-     */
+    /** Sets the weather mode and triggers a redraw. */
     public void setWeather(boolean sunny) {
         this.isSunny = sunny;
         drawBackground();
     }
 
-    /**
-     * No-op: no animation timeline remains.
-     */
+
     public void stop() {
-        // Intentionally empty.
+        // no-op
     }
 }

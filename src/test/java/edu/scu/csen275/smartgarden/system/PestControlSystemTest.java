@@ -45,9 +45,9 @@ public class PestControlSystemTest {
         pestControl = new PestControlSystem(garden);
         
         // Add some plants for testing
-        garden.addPlant(new Flower(new Position(0, 0), "Rose"));
+        garden.addPlant(new Flower(new Position(0, 0), "Lily"));
         garden.addPlant(new Vegetable(new Position(1, 1), "Tomato"));
-        garden.addPlant(new Flower(new Position(4, 4), "Sunflower"));
+        garden.addPlant(new Flower(new Position(4, 4), "Daisy"));
     }
 
     // ==================== Initialization Tests ====================

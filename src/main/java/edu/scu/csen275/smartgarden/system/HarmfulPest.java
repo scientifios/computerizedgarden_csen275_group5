@@ -4,19 +4,21 @@ import edu.scu.csen275.smartgarden.model.Plant;
 import edu.scu.csen275.smartgarden.model.Position;
 
 /**
- * Represents a harmful pest that damages plants.
+ * A non-beneficial pest that attacks plants and applies damage based on its type.
+ * Damage rate is derived from a predefined mapping in calculateDamageRate().
  */
 public class HarmfulPest extends Pest {
     
     /**
-     * Creates a new HarmfulPest.
+     * Creates a harmful pest of the given type at the given position.
+     * The damage rate is derived from the pest type via calculateDamageRate().
      */
     public HarmfulPest(String type, Position position) {
         super(type, calculateDamageRate(type), position);
     }
     
     /**
-     * Creates a default harmful pest (Red Mite).
+     * Creates a harmful pest with the default type "Red Mite" at the given position.
      */
     public HarmfulPest(Position position) {
         this("Red Mite", position);
@@ -35,7 +37,7 @@ public class HarmfulPest extends Pest {
     }
     
     /**
-     * Calculates damage rate based on pest type (Set C).
+     * Returns the damage rate for the given pest type using a predefined mapping (case-insensitive).
      */
     private static int calculateDamageRate(String type) {
         return switch (type.toLowerCase()) {

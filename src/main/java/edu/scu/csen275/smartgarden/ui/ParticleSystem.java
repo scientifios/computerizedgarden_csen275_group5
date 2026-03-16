@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Particle system for sparkles and pollen effects.
- * Creates floating, glowing particles throughout the garden.
+ * Lightweight particle overlay rendered on a canvas.
+ * Supports background particles and short burst effects.
  */
 public class ParticleSystem extends Pane {
     private final Canvas particleCanvas;
@@ -27,22 +27,19 @@ public class ParticleSystem extends Pane {
         this.particles = new ArrayList<>();
         this.random = new Random();
         
-        // Make canvas fill the pane
         particleCanvas.widthProperty().bind(this.widthProperty());
         particleCanvas.heightProperty().bind(this.heightProperty());
         particleCanvas.setMouseTransparent(true);
         
         this.getChildren().add(particleCanvas);
         
-        // Initialize particles
         initializeParticles();
         
-        // Start animation
         startParticleSystem();
     }
     
     /**
-     * Initializes sparkle and pollen particles.
+     * Seeds the particle list with an initial set of particles.
      */
     private void initializeParticles() {
         for (int i = 0; i < 30; i++) {
@@ -51,32 +48,31 @@ public class ParticleSystem extends Pane {
     }
     
     /**
-     * Adds a random particle at random position.
+     * Spawns a particle using randomized initial parameters.
      */
     private void addRandomParticle() {
         Particle p = new Particle();
         p.x = random.nextDouble() * (particleCanvas.getWidth() > 0 ? particleCanvas.getWidth() : 800);
         p.y = random.nextDouble() * (particleCanvas.getHeight() > 0 ? particleCanvas.getHeight() : 600);
         p.vx = (random.nextDouble() - 0.5) * 0.5;
-        p.vy = -random.nextDouble() * 0.8 - 0.2; // Float upward
+        p.vy = -random.nextDouble() * 0.8 - 0.2;
         p.size = 2 + random.nextDouble() * 3;
         p.lifetime = 5 + random.nextDouble() * 10;
         p.age = 0;
         
-        // Random type: sparkle or pollen
         if (random.nextDouble() < 0.5) {
             p.type = ParticleType.SPARKLE;
-            p.color = Color.rgb(255, 255, 150, 0.8); // Yellow sparkle
+            p.color = Color.rgb(255, 255, 150, 0.8);
         } else {
             p.type = ParticleType.POLLEN;
-            p.color = Color.rgb(255, 215, 0, 0.6); // Gold pollen
+            p.color = Color.rgb(255, 215, 0, 0.6);
         }
         
         particles.add(p);
     }
     
     /**
-     * Starts the particle animation system.
+     * Starts the animation timers for particle updates and spawning.
      */
     private void startParticleSystem() {
         particleTimeline = new Timeline(
@@ -89,7 +85,6 @@ public class ParticleSystem extends Pane {
         particleTimeline.setCycleCount(Animation.INDEFINITE);
         particleTimeline.play();
         
-        // Periodically add new particles
         Timeline spawnTimeline = new Timeline(
             new KeyFrame(Duration.seconds(2), e -> {
                 if (isActive && particles.size() < 50) {
@@ -102,41 +97,35 @@ public class ParticleSystem extends Pane {
     }
     
     /**
-     * Updates all particles.
+     * Advances particle state and redraws the canvas.
      */
     private void updateParticles() {
         GraphicsContext gc = particleCanvas.getGraphicsContext2D();
         double width = particleCanvas.getWidth();
         double height = particleCanvas.getHeight();
         
-        // Clear canvas with transparent background
         gc.clearRect(0, 0, width, height);
         
-        // Update and draw particles
         Iterator<Particle> it = particles.iterator();
         while (it.hasNext()) {
             Particle p = it.next();
             
-            // Update position
             p.x += p.vx;
             p.y += p.vy;
             
-            // Update age
-            p.age += 0.016; // ~60 FPS
+            p.age += 0.016;
             
-            // Remove if expired
             if (p.age > p.lifetime || p.y < -10 || p.y > height + 10) {
                 it.remove();
                 continue;
             }
             
-            // Draw particle
             drawParticle(gc, p);
         }
     }
     
     /**
-     * Draws a particle (sparkle or pollen).
+     * Renders a particle with fade-out based on its lifetime.
      */
     private void drawParticle(GraphicsContext gc, Particle p) {
         double alpha = 1.0 - (p.age / p.lifetime);
@@ -145,19 +134,16 @@ public class ParticleSystem extends Pane {
         gc.setGlobalAlpha(alpha);
         
         if (p.type == ParticleType.SPARKLE) {
-            // Draw sparkle as a star/cross
             gc.setFill(p.color.deriveColor(0, 1, 1, alpha));
             gc.setStroke(p.color.deriveColor(0, 1, 1.5, alpha));
             
             double size = p.size;
             gc.fillOval(p.x - size/2, p.y - size/2, size, size);
             
-            // Add cross lines for sparkle effect
             gc.setLineWidth(1);
             gc.strokeLine(p.x - size, p.y, p.x + size, p.y);
             gc.strokeLine(p.x, p.y - size, p.x, p.y + size);
         } else {
-            // Draw pollen as a small circle
             gc.setFill(p.color.deriveColor(0, 1, 1, alpha));
             gc.fillOval(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
         }
@@ -166,7 +152,7 @@ public class ParticleSystem extends Pane {
     }
     
     /**
-     * Creates a burst of sparkles at a specific location.
+     * Emits a short-lived burst effect centered at the given coordinates.
      */
     public void createSparkleBurst(double x, double y) {
         for (int i = 0; i < 10; i++) {
@@ -182,8 +168,7 @@ public class ParticleSystem extends Pane {
             p.age = 0;
             p.type = ParticleType.SPARKLE;
             
-            // Colorful sparkles
-            double hue = random.nextDouble() * 60; // Yellow to orange range
+            double hue = random.nextDouble() * 60;
             p.color = Color.hsb(hue, 0.8, 1.0, 1.0);
             
             particles.add(p);
@@ -191,7 +176,7 @@ public class ParticleSystem extends Pane {
     }
     
     /**
-     * Stops the particle system.
+     * Disables updates and stops running timelines.
      */
     public void stop() {
         isActive = false;
@@ -200,18 +185,12 @@ public class ParticleSystem extends Pane {
         }
     }
     
-    /**
-     * Particle data structure.
-     */
     private static class Particle {
         double x, y, vx, vy, size, lifetime, age;
         Color color;
         ParticleType type;
     }
     
-    /**
-     * Particle types.
-     */
     private enum ParticleType {
         SPARKLE, POLLEN
     }

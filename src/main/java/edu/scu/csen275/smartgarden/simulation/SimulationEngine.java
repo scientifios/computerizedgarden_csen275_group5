@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Central simulation engine that coordinates all garden systems.
- * Manages time progression and system updates.
+ * JavaFX-driven simulation loop for the garden.
+ * Coordinates per-tick updates across plants + systems.
  */
 public class SimulationEngine {
     private final Garden garden;
@@ -36,12 +36,9 @@ public class SimulationEngine {
     private int dayCounter;
     
     private static final Logger logger = Logger.getInstance();
-    private static final int BASE_TICK_INTERVAL_MS = 1000; // 1 second real time = 1 minute sim time at 1x
-    private static final int TICKS_PER_SIM_DAY = 1440; // 1440 minutes in a day
+    private static final int BASE_TICK_INTERVAL_MS = 1000; // 1s real = 1 min sim (1x)
+    private static final int TICKS_PER_SIM_DAY = 1440;     // minutes/day
     
-    /**
-     * Creates a new SimulationEngine.
-     */
     public SimulationEngine(Garden garden) {
         this.garden = garden;
         this.wateringSystem = new WateringSystem(garden);
@@ -50,7 +47,7 @@ public class SimulationEngine {
         this.pestControlSystem = new PestControlSystem(garden);
         this.weatherSystem = new WeatherSystem(garden, this.heatingSystem, this.coolingSystem);
         
-        // Connect weather system to watering system (so watering skips when raining)
+        // Weather-aware watering (skip when raining)
         this.wateringSystem.setWeatherSystem(this.weatherSystem);
         
         this.state = new SimpleObjectProperty<>(SimulationState.STOPPED);
@@ -61,7 +58,6 @@ public class SimulationEngine {
         this.ticksPerDay = 0;
         this.dayCounter = 0;
         
-        // Create timeline for simulation ticks
         this.timeline = new Timeline(
             new KeyFrame(Duration.millis(BASE_TICK_INTERVAL_MS), e -> tick())
         );
@@ -70,9 +66,6 @@ public class SimulationEngine {
         logger.info("Simulation", "Simulation engine created and ready");
     }
     
-    /**
-     * Starts the simulation.
-     */
     public void start() {
         if (state.get() == SimulationState.RUNNING) {
             logger.warning("Simulation", "Simulation already running");
@@ -89,9 +82,6 @@ public class SimulationEngine {
         logger.info("Simulation", "Simulation started at speed " + speedMultiplier.get() + "x");
     }
     
-    /**
-     * Pauses the simulation.
-     */
     public void pause() {
         if (state.get() != SimulationState.RUNNING) {
             return;
@@ -102,9 +92,6 @@ public class SimulationEngine {
         logger.info("Simulation", "Simulation paused at tick " + elapsedTicks.get());
     }
     
-    /**
-     * Resumes the simulation after pause.
-     */
     public void resume() {
         if (state.get() != SimulationState.PAUSED) {
             return;
@@ -115,9 +102,6 @@ public class SimulationEngine {
         logger.info("Simulation", "Simulation resumed");
     }
     
-    /**
-     * Stops the simulation.
-     */
     public void stop() {
         state.set(SimulationState.STOPPED);
         timeline.stop();
@@ -128,9 +112,6 @@ public class SimulationEngine {
         logStatistics();
     }
     
-    /**
-     * Sets simulation speed multiplier.
-     */
     public void setSpeed(int multiplier) {
         if (multiplier < 1 || multiplier > 10) {
             throw new IllegalArgumentException("Speed multiplier must be 1-10");
@@ -141,28 +122,22 @@ public class SimulationEngine {
         logger.info("Simulation", "Speed set to " + multiplier + "x");
     }
     
-    /**
-     * Main simulation tick - called every interval.
-     */
     private void tick() {
         try {
             elapsedTicks.set(elapsedTicks.get() + 1);
             ticksPerDay++;
             
-            // Advance simulation time by 1 minute
+            // +1 min sim time per tick
             simulationTime.set(simulationTime.get().plusMinutes(1));
             
-            // Update all plants
             updatePlants();
             
-            // Update all systems
             wateringSystem.checkAndWater();
             heatingSystem.update();
             coolingSystem.update();
             pestControlSystem.update();
             weatherSystem.update();
             
-            // Auto-refill water and pesticide if below threshold
             autoRefillSupplies();
             
             // Check for new day
@@ -171,10 +146,8 @@ public class SimulationEngine {
                 ticksPerDay = 0;
             }
             
-            // Update garden living count
             garden.updateLivingCount();
             
-            // Log every 100 ticks
             if (elapsedTicks.get() % 100 == 0) {
                 logger.debug("Simulation", "Tick " + elapsedTicks.get() + 
                             " | Day " + dayCounter + 
@@ -183,15 +156,12 @@ public class SimulationEngine {
             
         } catch (Exception e) {
             logger.logException("Simulation", "Error during tick " + elapsedTicks.get(), e);
-            // Continue simulation despite errors
         }
     }
     
-    /**
-     * Automatically refills water and pesticide supplies when they drop below threshold.
-     */
+    /** Auto-refill policy to keep long runs from stalling due to empty supplies. */
     private void autoRefillSupplies() {
-        // Water supply threshold: 20% of initial (2000L out of 10000L)
+        // Water: refill to INITIAL when below threshold (20%).
         final int WATER_THRESHOLD = 2000;
         final int INITIAL_WATER = 10000;
         
@@ -203,7 +173,7 @@ public class SimulationEngine {
                        INITIAL_WATER + "L");
         }
         
-        // Pesticide stock threshold: 20% of initial (10 out of 50)
+        // Pesticide: refill to INITIAL when below threshold (20%).
         final int PESTICIDE_THRESHOLD = 10;
         final int INITIAL_PESTICIDE = 50;
         
@@ -216,32 +186,22 @@ public class SimulationEngine {
         }
     }
     
-    /**
-     * Updates all plants in the garden.
-     */
     private void updatePlants() {
         for (Plant plant : garden.getAllPlants()) {
             plant.update();
         }
     }
     
-    /**
-     * Advances to a new simulation day.
-     */
     private void advanceDay() {
         dayCounter++;
         logger.info("Simulation", "Day " + dayCounter + " complete. Living plants: " + 
                    garden.getLivingPlants().size() + "/" + garden.getTotalPlants());
         
-        // Advance all plants by one day
         for (Plant plant : garden.getAllPlants()) {
             plant.advanceDay();
         }
     }
     
-    /**
-     * Logs simulation statistics.
-     */
     private void logStatistics() {
         logger.info("Statistics", "=== Simulation Summary ===");
         logger.info("Statistics", "Total ticks: " + elapsedTicks.get());
@@ -260,7 +220,7 @@ public class SimulationEngine {
         logger.info("Statistics", "=========================");
     }
     
-    // System getters
+    // System
     public Garden getGarden() {
         return garden;
     }
@@ -285,7 +245,7 @@ public class SimulationEngine {
         return weatherSystem;
     }
     
-    // Property getters
+    // Properties
     public ObjectProperty<SimulationState> stateProperty() {
         return state;
     }
@@ -302,7 +262,6 @@ public class SimulationEngine {
         return simulationTime;
     }
     
-    // Value getters
     public SimulationState getState() {
         return state.get();
     }
@@ -323,16 +282,10 @@ public class SimulationEngine {
         return dayCounter;
     }
     
-    /**
-     * Gets formatted simulation time string.
-     */
     public String getFormattedTime() {
         return simulationTime.get().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
     }
     
-    /**
-     * Simulation state enumeration.
-     */
     public enum SimulationState {
         STOPPED,
         RUNNING,

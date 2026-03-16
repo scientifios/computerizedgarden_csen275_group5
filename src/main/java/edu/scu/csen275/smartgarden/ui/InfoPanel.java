@@ -299,27 +299,27 @@ public class InfoPanel extends VBox {
     private String resolvePlantImagePath(Plant plant) {
         String plantTypeName = plant.getPlantType().toLowerCase();
         if (plantTypeName.contains("strawberry")) return "/images/strawberry.png";
-        if (plantTypeName.contains("grape")) return "/images/grape.png";
+        if (plantTypeName.contains("cherry")) return "/images/cherry.png";
         if (plantTypeName.contains("apple")) return "/images/apple.png";
-        if (plantTypeName.contains("carrot")) return "/images/carrot.png";
+        if (plantTypeName.contains("cabbage")) return "/images/cabbage.png";
         if (plantTypeName.contains("tomato")) return "/images/tomato.png";
-        if (plantTypeName.contains("onion")) return "/images/onion.png";
-        if (plantTypeName.contains("sunflower")) return "/images/sunflower.png";
-        if (plantTypeName.contains("tulip")) return "/images/tulip.png";
-        if (plantTypeName.contains("rose")) return "/images/rose.png";
+        if (plantTypeName.contains("scallion")) return "/images/scallion.png";
+        if (plantTypeName.contains("daisy")) return "/images/daisy.png";
+        if (plantTypeName.contains("lily")) return "/images/lily.png";
+        if (plantTypeName.contains("peony")) return "/images/peony.png";
 
         for (PlantType type : PlantType.values()) {
             if (plant.getPlantType().equalsIgnoreCase(type.getDisplayName())) {
                 return switch (type) {
                     case STRAWBERRY -> "/images/strawberry.png";
-                    case GRAPEVINE -> "/images/grape.png";
+                    case CHERRY -> "/images/cherry.png";
                     case APPLE -> "/images/apple.png";
-                    case CARROT -> "/images/carrot.png";
+                    case CABBAGE -> "/images/cabbage.png";
                     case TOMATO -> "/images/tomato.png";
-                    case ONION -> "/images/onion.png";
-                    case SUNFLOWER -> "/images/sunflower.png";
-                    case TULIP -> "/images/tulip.png";
-                    case ROSE -> "/images/rose.png";
+                    case SCALLION -> "/images/scallion.png";
+                    case DAISY -> "/images/daisy.png";
+                    case LILY -> "/images/lily.png";
+                    case PEONY -> "/images/peony.png";
                 };
             }
         }

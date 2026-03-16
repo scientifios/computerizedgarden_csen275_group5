@@ -4,7 +4,8 @@ import edu.scu.csen275.smartgarden.model.Plant;
 import edu.scu.csen275.smartgarden.model.Position;
 
 /**
- * Abstract base class for pests and insects in the garden.
+ * Common pest model used by the simulation.
+ * Tracks pest identity (type), damage intensity, location, and alive state.
  */
 public abstract class Pest {
     protected final String pestType;
@@ -13,7 +14,7 @@ public abstract class Pest {
     protected boolean isAlive;
     
     /**
-     * Creates a new Pest.
+     * Initializes a pest instance with its type, damage rate, and starting position.
      */
     protected Pest(String pestType, int damageRate, Position position) {
         this.pestType = pestType;
@@ -23,23 +24,22 @@ public abstract class Pest {
     }
     
     /**
-     * Causes damage to a plant.
+     * Applies this pest's attack behavior to the given plant.
      */
     public abstract void causeDamage(Plant plant);
     
     /**
-     * Checks if this pest is beneficial or harmful.
+     * @return true if this pest is beneficial to the garden; false if it is harmful.
      */
     public abstract boolean isBeneficial();
     
     /**
-     * Removes the pest (killed by treatment).
+     * Marks this pest as no longer alive (e.g., removed by a treatment action).
      */
     public void eliminate() {
         isAlive = false;
     }
     
-    // Getters
     public String getPestType() {
         return pestType;
     }

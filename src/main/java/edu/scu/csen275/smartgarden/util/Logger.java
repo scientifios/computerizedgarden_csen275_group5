@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Centralized logging system for the Smart Garden application.
- * Thread-safe singleton implementation with file and in-memory logging.
+ * Application logger with a buffered file sink and an in-memory history.
+ * Provides a singleton instance and optional API log mirroring.
  */
 public class Logger {
     private static Logger instance;
@@ -27,7 +27,7 @@ public class Logger {
     private LogLevel minLogLevel;
     private BufferedWriter writer;
     
-    // API logging support - write to log.txt when API mode is enabled
+    // When API logging is enabled, entries are also mirrored to a separate file.
     private static BufferedWriter apiLogWriter;
     private static boolean apiModeEnabled = false;
     private static final Object apiLogLock = new Object();
@@ -37,7 +37,7 @@ public class Logger {
     private static final int BUFFER_FLUSH_SIZE = 10;
     
     /**
-     * Private constructor for singleton pattern.
+     * Initializes a logging session and opens the per-session log file.
      */
     private Logger() {
         this.sessionId = generateSessionId();
@@ -64,7 +64,7 @@ public class Logger {
     }
     
     /**
-     * Gets the singleton instance of the Logger.
+     * @return singleton logger instance
      */
     public static Logger getInstance() {
         if (instance == null) {
@@ -78,7 +78,8 @@ public class Logger {
     }
     
     /**
-     * Logs a message with specified level and category.
+     * Records a log entry if it meets the current minimum level.
+     * Entries are buffered for file flush and retained in memory; optionally mirrored for API mode.
      */
     public void log(LogLevel level, String category, String message) {
         if (level.ordinal() < minLogLevel.ordinal()) {
@@ -89,19 +90,18 @@ public class Logger {
         buffer.add(entry);
         memoryLog.add(entry);
         
-        // Also write to log.txt if API mode is enabled (for API monitoring)
+        // Mirror entries to the API log when API logging is enabled.
         if (apiModeEnabled) {
             writeToApiLog(entry);
         }
         
-        // Flush if buffer is full
         if (buffer.size() >= BUFFER_FLUSH_SIZE) {
             flush();
         }
     }
     
     /**
-     * Writes a log entry to the API log.txt file (when API mode is enabled).
+     * Writes an entry to the API mirror log when API logging is enabled.
      */
     private static void writeToApiLog(LogEntry entry) {
         synchronized (apiLogLock) {
@@ -112,41 +112,29 @@ public class Logger {
                     apiLogWriter.flush();
                 }
             } catch (IOException e) {
-                // Silently fail - don't disrupt logging if log.txt write fails
+                // Best-effort mirror write; failures should not disrupt primary logging.
             }
         }
     }
     
-    /**
-     * Logs an INFO level message.
-     */
     public void info(String category, String message) {
         log(LogLevel.INFO, category, message);
     }
     
-    /**
-     * Logs a WARNING level message.
-     */
     public void warning(String category, String message) {
         log(LogLevel.WARNING, category, message);
     }
     
-    /**
-     * Logs an ERROR level message.
-     */
     public void error(String category, String message) {
         log(LogLevel.ERROR, category, message);
     }
     
-    /**
-     * Logs a DEBUG level message.
-     */
     public void debug(String category, String message) {
         log(LogLevel.DEBUG, category, message);
     }
     
     /**
-     * Logs an exception with stack trace.
+     * Logs an exception message plus a flattened stack trace.
      */
     public void logException(String category, String message, Exception e) {
         error(category, message + ": " + e.getMessage());
@@ -154,7 +142,7 @@ public class Logger {
     }
     
     /**
-     * Flushes buffered log entries to file.
+     * Drains the buffer and appends entries to the session log file.
      */
     public synchronized void flush() {
         try {
@@ -172,7 +160,7 @@ public class Logger {
     }
     
     /**
-     * Gets recent log entries (last N entries).
+     * Returns up to the last N in-memory log entries (most recent last).
      */
     public List<LogEntry> getRecentLogs(int count) {
         int size = memoryLog.size();
@@ -181,14 +169,14 @@ public class Logger {
     }
     
     /**
-     * Gets all log entries in memory.
+     * @return snapshot of the in-memory log history
      */
     public List<LogEntry> getAllLogs() {
         return new ArrayList<>(memoryLog);
     }
     
     /**
-     * Filters logs by category.
+     * Returns in-memory entries matching the given category.
      */
     public List<LogEntry> filterByCategory(String category) {
         return memoryLog.stream()
@@ -197,7 +185,7 @@ public class Logger {
     }
     
     /**
-     * Filters logs by level.
+     * Returns in-memory entries matching the given level.
      */
     public List<LogEntry> filterByLevel(LogLevel level) {
         return memoryLog.stream()
@@ -206,7 +194,7 @@ public class Logger {
     }
     
     /**
-     * Sets the minimum log level to record.
+     * Updates the minimum log level gate for subsequent entries.
      */
     public void setMinLogLevel(LogLevel level) {
         this.minLogLevel = level;
@@ -214,19 +202,17 @@ public class Logger {
     }
     
     /**
-     * Enables API logging mode - writes all logs to log.txt file as well as normal log file.
-     * This allows API monitoring scripts to see all system responses in one file.
-     * 
-     * @param apiLogFile Path to the log.txt file (typically "log.txt" in project root)
+     * Enables API log mirroring to the given file (in addition to the per-session log file).
+     *
+     * @param apiLogFile destination path for the API mirror log
      */
     public static void enableApiLogging(Path apiLogFile) {
         synchronized (apiLogLock) {
             try {
-                // Write header to log.txt
+                // Open the API mirror writer and write a session header.
                 apiLogWriter = Files.newBufferedWriter(apiLogFile, 
                     StandardOpenOption.CREATE, StandardOpenOption.APPEND);
                 
-                // Write separator for new session
                 apiLogWriter.write("\n");
                 apiLogWriter.write("=====================================");
                 apiLogWriter.newLine();
@@ -247,7 +233,7 @@ public class Logger {
     }
     
     /**
-     * Disables API logging and closes the log.txt file.
+     * Disables API log mirroring and closes the mirror writer.
      */
     public static void disableApiLogging() {
         synchronized (apiLogLock) {
@@ -265,7 +251,7 @@ public class Logger {
     }
     
     /**
-     * Closes the logger and releases resources.
+     * Flushes pending entries and closes the session log writer.
      */
     public void close() {
         flush();
@@ -281,14 +267,14 @@ public class Logger {
     }
     
     /**
-     * Generates a unique session ID based on timestamp.
+     * Generates a timestamp-based session id for file naming.
      */
     private String generateSessionId() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
     }
     
     /**
-     * Writes log file header.
+     * Writes a session header to the log file.
      */
     private void logHeader() {
         try {
@@ -309,7 +295,7 @@ public class Logger {
     }
     
     /**
-     * Converts exception stack trace to string.
+     * Flattens a stack trace into a single-line string.
      */
     private String getStackTrace(Exception e) {
         StringBuilder sb = new StringBuilder();
@@ -319,9 +305,6 @@ public class Logger {
         return sb.toString();
     }
     
-    /**
-     * Represents a single log entry.
-     */
     public record LogEntry(LocalDateTime timestamp, LogLevel level, String category, String message) {
         public String toFileFormat() {
             return String.format("[%s] %-7s [%-15s] %s",
@@ -339,9 +322,6 @@ public class Logger {
         }
     }
     
-    /**
-     * Log level enumeration.
-     */
     public enum LogLevel {
         DEBUG,
         INFO,

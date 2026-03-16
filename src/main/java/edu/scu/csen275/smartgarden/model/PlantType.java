@@ -1,23 +1,21 @@
 package edu.scu.csen275.smartgarden.model;
 
 /**
- * Enum representing all available plant types with their emojis, display names, and categories.
+ * Enumerates selectable plant types along with their display metadata.
  */
 public enum PlantType {
-    // Fruit Plants
+
     STRAWBERRY("🍓", "Strawberry", PlantCategory.FRUIT),
-    GRAPEVINE("🍇", "Grapevine", PlantCategory.FRUIT),
-    APPLE("🍎", "Apple Sapling", PlantCategory.FRUIT),
+    CHERRY("🍇","Cherry", PlantCategory.FRUIT),
+    APPLE("🍎","Apple Sapling", PlantCategory.FRUIT),
     
-    // Vegetable Crops
-    CARROT("🥕", "Carrot", PlantCategory.VEGETABLE),
-    TOMATO("🍅", "Tomato", PlantCategory.VEGETABLE),
-    ONION("🧅", "Onion", PlantCategory.VEGETABLE),
+    CABBAGE("🥕", "Cabbage", PlantCategory.VEGETABLE),
+    TOMATO("🍅","Tomato", PlantCategory.VEGETABLE),
+    SCALLION("🧅", "Scallion", PlantCategory.VEGETABLE),
     
-    // Flowers
-    SUNFLOWER("🌻", "Sunflower", PlantCategory.FLOWER),
-    TULIP("🌸", "Tulip", PlantCategory.FLOWER),
-    ROSE("🌹", "Rose", PlantCategory.FLOWER);
+    DAISY("🌻","Daisy", PlantCategory.FLOWER),
+    LILY("🌸","Lily", PlantCategory.FLOWER),
+    PEONY("🌹","Peony", PlantCategory.FLOWER);
     
     private final String emoji;
     private final String displayName;
@@ -28,7 +26,7 @@ public enum PlantType {
         this.displayName = displayName;
         this.category = category;
     }
-    
+
     public String getEmoji() {
         return emoji;
     }
@@ -42,13 +40,13 @@ public enum PlantType {
     }
     
     /**
-     * Gets the category header text for display in dropdown.
-     */
+    * Returns a formatted UI header for the given plant category.
+    */
     public static String getCategoryHeader(PlantCategory category) {
         return switch (category) {
-            case FRUIT -> "🍓 Fruit Plants";
-            case VEGETABLE -> "🥕 Vegetable Crops";
-            case FLOWER -> "🌸 Flowers";
+            case FRUIT -> "Fruits";
+            case VEGETABLE -> "Vegetable";
+            case FLOWER -> "Flowers";
         };
     }
 }

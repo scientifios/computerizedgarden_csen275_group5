@@ -20,8 +20,8 @@ import javafx.scene.control.Label;
 import javafx.util.Duration;
 
 /**
- * Tile component for garden grid cells.
- * Pest and watering visuals are represented by static status icons.
+ * UI element representing a single cell in the garden grid.
+ * Displays the plant image and small indicators for pest and water status.
  */
 public class AnimatedTile extends StackPane {
     private final ImageView plantImageView;
@@ -259,11 +259,9 @@ public class AnimatedTile extends StackPane {
     }
 
     public void animateWatering() {
-        // Disabled by requirement.
     }
 
     public void startWateringAnimation() {
-        // Disabled by requirement.
         isWatering = false;
     }
 
@@ -272,7 +270,6 @@ public class AnimatedTile extends StackPane {
     }
 
     public void animatePesticide() {
-        // Disabled by requirement.
     }
 
     private String getPlantImagePath(Plant plant) {
@@ -288,28 +285,28 @@ public class AnimatedTile extends StackPane {
 
         String lowerName = plantTypeName.toLowerCase();
         if (lowerName.contains("strawberry")) return "/images/strawberry.png";
-        if (lowerName.contains("grapevine") || lowerName.contains("grape")) return "/images/grape.png";
+        if (lowerName.contains("cherry")) return "/images/cherry.png";
         if (lowerName.contains("apple")) return "/images/apple.png";
-        if (lowerName.contains("carrot")) return "/images/carrot.png";
+        if (lowerName.contains("cabbage")) return "/images/cabbage.png";
         if (lowerName.contains("tomato")) return "/images/tomato.png";
-        if (lowerName.contains("onion")) return "/images/onion.png";
-        if (lowerName.contains("sunflower")) return "/images/sunflower.png";
-        if (lowerName.contains("tulip")) return "/images/tulip.png";
-        if (lowerName.contains("rose")) return "/images/rose.png";
+        if (lowerName.contains("scallion")) return "/images/scallion.png";
+        if (lowerName.contains("daisy")) return "/images/daisy.png";
+        if (lowerName.contains("lily")) return "/images/lily.png";
+        if (lowerName.contains("peony")) return "/images/peony.png";
         return null;
     }
 
     private String getImagePathForPlantType(PlantType type) {
         return switch (type) {
             case STRAWBERRY -> "/images/strawberry.png";
-            case GRAPEVINE -> "/images/grape.png";
+            case CHERRY -> "/images/cherry.png";
             case APPLE -> "/images/apple.png";
-            case CARROT -> "/images/carrot.png";
+            case CABBAGE -> "/images/cabbage.png";
             case TOMATO -> "/images/tomato.png";
-            case ONION -> "/images/onion.png";
-            case SUNFLOWER -> "/images/sunflower.png";
-            case TULIP -> "/images/tulip.png";
-            case ROSE -> "/images/rose.png";
+            case SCALLION -> "/images/scallion.png";
+            case DAISY -> "/images/daisy.png";
+            case LILY -> "/images/lily.png";
+            case PEONY -> "/images/peony.png";
         };
     }
 
@@ -421,7 +418,6 @@ public class AnimatedTile extends StackPane {
     }
 
     public void showDamageVisual(int damage) {
-        // Disabled by requirement.
     }
 
     public void applyPesticide() {
@@ -450,7 +446,7 @@ public class AnimatedTile extends StackPane {
     }
 
     /**
-     * Forces the water indicator to be shown briefly for UI feedback.
+     * Temporarily shows the water indicator to highlight low water status.
      */
     public void showTemporaryWaterHint() {
         waterHintUntilMs = System.currentTimeMillis() + WATER_HINT_DURATION_MS;

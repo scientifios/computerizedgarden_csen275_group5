@@ -5,17 +5,13 @@ import edu.scu.csen275.smartgarden.simulation.SimulationEngine;
 import edu.scu.csen275.smartgarden.util.Logger;
 
 /**
- * Main controller that coordinates the garden model and simulation.
- * Mediates between UI and domain logic.
+ * Bridge between UI actions and the garden/simulation domain layer.
  */
 public class GardenController {
     private final Garden garden;
     private final SimulationEngine simulationEngine;
     private final Logger logger;
     
-    /**
-     * Creates a new GardenController.
-     */
     public GardenController(int rows, int columns) {
         this.garden = new Garden(rows, columns);
         this.simulationEngine = new SimulationEngine(garden);
@@ -24,10 +20,7 @@ public class GardenController {
         logger.info("Controller", "Garden controller initialized with " + 
                    rows + "x" + columns + " garden");
     }
-    
-    /**
-     * Plants a new plant in the garden using PlantType enum.
-     */
+   
     public boolean plantSeed(PlantType plantType, Position position) {
         try {
             Plant plant = createPlant(plantType, position);
@@ -43,14 +36,15 @@ public class GardenController {
     }
     
     /**
-     * Legacy method for backward compatibility - converts string to PlantType.
-     */
+    * String-based API kept for backward compatibility.
+    * Tries to map to PlantType first; falls back to legacy mapping if needed.
+    */
     public boolean plantSeed(String plantType, Position position) {
         try {
             PlantType type = PlantType.valueOf(plantType.toUpperCase().replace(" ", "_"));
             return plantSeed(type, position);
         } catch (IllegalArgumentException e) {
-            // Fallback to old system for compatibility
+            // Legacy fallback for older string inputs.
             Plant plant = createPlantLegacy(plantType, position);
             if (plant != null && garden.addPlant(plant)) {
                 logger.info("Controller", "Plant " + plantType + " added at " + position);
@@ -60,52 +54,44 @@ public class GardenController {
         }
     }
     
-    /**
-     * Creates a plant based on PlantType enum.
-     */
+    /** Factory for PlantType -> Plant instance. */
     private Plant createPlant(PlantType plantType, Position position) {
         return switch (plantType) {
             // Fruit Plants
             case STRAWBERRY -> new Fruit(position, "Strawberry");
-            case GRAPEVINE -> new Fruit(position, "Grapevine");
+            case CHERRY -> new Fruit(position, "Cherry");
             case APPLE -> new Fruit(position, "Apple Sapling");
             
             // Vegetable Crops
-            case CARROT -> new Vegetable(position, "Carrot");
+            case CABBAGE -> new Vegetable(position, "Cabbage");
             case TOMATO -> new Vegetable(position, "Tomato");
-            case ONION -> new Vegetable(position, "Onion");
+            case SCALLION -> new Vegetable(position, "Scallion");
             
             // Flowers
-            case SUNFLOWER -> new Flower(position, "Sunflower");
-            case TULIP -> new Flower(position, "Tulip");
-            case ROSE -> new Flower(position, "Rose");
+            case DAISY -> new Flower(position, "Daisy");
+            case LILY -> new Flower(position, "Lily");
+            case PEONY -> new Flower(position, "peony");
         };
     }
     
     /**
-     * Legacy method for creating plants from string (backward compatibility).
+     * Legacy string-to-plant mapping.
+     * Only kept to support older UI/input paths.
      */
     private Plant createPlantLegacy(String plantType, Position position) {
         return switch (plantType.toLowerCase()) {
             case "flower" -> new Flower(position);
             case "vegetable", "tomato" -> new Vegetable(position, "Tomato");
             case "carrot" -> new Vegetable(position, "Carrot");
-            // Tree, Herb, and Grass plant models have been removed
-            // Only PlantType enum values are supported now
+            // Legacy support is limited: removed plant categories are intentionally not supported.
             default -> null;
         };
     }
     
-    /**
-     * Removes a plant from the garden.
-     */
     public boolean removePlant(Position position) {
         return garden.removePlant(position);
     }
     
-    /**
-     * Starts the simulation.
-     */
     public void startSimulation() {
         try {
             simulationEngine.start();
@@ -114,64 +100,39 @@ public class GardenController {
             throw e;
         }
     }
-    
-    /**
-     * Pauses the simulation.
-     */
+
     public void pauseSimulation() {
         simulationEngine.pause();
     }
     
-    /**
-     * Resumes the simulation.
-     */
     public void resumeSimulation() {
         simulationEngine.resume();
     }
     
-    /**
-     * Stops the simulation.
-     */
     public void stopSimulation() {
         simulationEngine.stop();
     }
     
-    /**
-     * Sets simulation speed.
-     */
     public void setSimulationSpeed(int multiplier) {
         simulationEngine.setSpeed(multiplier);
     }
     
-    /**
-     * Manually waters a zone.
-     */
     public void manualWaterZone(int zoneId) {
         simulationEngine.getWateringSystem().manualWater(zoneId);
     }
     
-    /**
-     * Manually treats a zone for pests.
-     */
     public void manualTreatZone(int zoneId) {
         simulationEngine.getPestControlSystem().manualTreat(zoneId);
     }
     
-    /**
-     * Refills water supply.
-     */
     public void refillWater() {
         simulationEngine.getWateringSystem().refillWater(5000);
     }
     
-    /**
-     * Refills pesticide stock.
-     */
     public void refillPesticide() {
         simulationEngine.getPestControlSystem().refillPesticide(25);
     }
     
-    // Getters
     public Garden getGarden() {
         return garden;
     }
@@ -184,16 +145,11 @@ public class GardenController {
         return logger;
     }
     
-    /**
-     * Gets current simulation state as a readable string.
-     */
     public String getSimulationStatus() {
         return simulationEngine.getState().toString();
     }
     
-    /**
-     * Shuts down the controller and releases resources.
-     */
+    /** Stops simulation if running and closes logger. */
     public void shutdown() {
         if (simulationEngine.getState() == SimulationEngine.SimulationState.RUNNING) {
             simulationEngine.stop();
