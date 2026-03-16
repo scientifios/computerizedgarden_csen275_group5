@@ -29,7 +29,8 @@ public class GardenGridPanel extends VBox {
     private Pane coinFloatPane; // Pane for coin float animations
     private Position selectedPlantPosition;
     private Consumer<Position> plantSelectionHandler;
-    private static final int GRID_SIZE = 9;
+    private final int gridRows;
+    private final int gridCols;
     
     /**
      * Gets the animation container.
@@ -87,8 +88,10 @@ public class GardenGridPanel extends VBox {
     
     public GardenGridPanel(GardenController controller) {
         this.controller = controller;
-        this.tiles = new AnimatedTile[GRID_SIZE][GRID_SIZE];
-        this.grassTiles = new GrassTile[GRID_SIZE][GRID_SIZE];
+        this.gridRows = controller.getGarden().getRows();
+        this.gridCols = controller.getGarden().getColumns();
+        this.tiles = new AnimatedTile[gridRows][gridCols];
+        this.grassTiles = new GrassTile[gridRows][gridCols];
         this.gardenGrid = new GridPane();
         
         setupPanel();
@@ -103,8 +106,8 @@ public class GardenGridPanel extends VBox {
         this.animationContainer = container;
         
         // Also set animation container on all existing tiles
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 if (tiles[row][col] != null) {
                     tiles[row][col].setAnimationContainer(container);
                 }
@@ -298,15 +301,15 @@ public class GardenGridPanel extends VBox {
         gardenGrid.getStyleClass().add("garden-grid");
         gardenGrid.setAlignment(Pos.CENTER);
         
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 // Create grass tile for empty cells
                 GrassTile grassTile = new GrassTile();
                 grassTiles[row][col] = grassTile;
                 
                 // Create plant tile (hidden initially)
                 AnimatedTile tile = createTile(row, col);
-                int tileIndex = (row * GRID_SIZE + col);
+                int tileIndex = (row * gridCols + col);
                 tile.setTileIndex(tileIndex);
                 tiles[row][col] = tile;
                 tile.setVisible(false); // Hidden until plant is added
@@ -480,7 +483,7 @@ public class GardenGridPanel extends VBox {
      * Updates a specific tile.
      */
     public void updateTile(int row, int col) {
-        if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+        if (row >= 0 && row < gridRows && col >= 0 && col < gridCols) {
             Position position = new Position(row, col);
             Plant plant = controller.getGarden().getPlant(position);
             
@@ -505,8 +508,8 @@ public class GardenGridPanel extends VBox {
      * Updates all tiles in the grid.
      */
     public void updateAllTiles() {
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 updateTile(row, col);
             }
         }
@@ -525,8 +528,8 @@ public class GardenGridPanel extends VBox {
         int startCol = zoneCol * tilesPerZone;
         int endCol = startCol + tilesPerZone;
         
-        for (int row = startRow; row < endRow && row < GRID_SIZE; row++) {
-            for (int col = startCol; col < endCol && col < GRID_SIZE; col++) {
+        for (int row = startRow; row < endRow && row < gridRows; row++) {
+            for (int col = startCol; col < endCol && col < gridCols; col++) {
                 Position position = new Position(row, col);
                 Plant plant = controller.getGarden().getPlant(position);
                 if (tiles[row][col] != null && plant != null) {
@@ -541,8 +544,8 @@ public class GardenGridPanel extends VBox {
      * Refreshes tile state after global watering.
      */
     public void animateAllTilesWatering() {
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 Position position = new Position(row, col);
                 Plant plant = controller.getGarden().getPlant(position);
                 if (tiles[row][col] != null && plant != null) {
@@ -566,8 +569,8 @@ public class GardenGridPanel extends VBox {
         int startCol = zoneCol * tilesPerZone;
         int endCol = startCol + tilesPerZone;
         
-        for (int row = startRow; row < endRow && row < GRID_SIZE; row++) {
-            for (int col = startCol; col < endCol && col < GRID_SIZE; col++) {
+        for (int row = startRow; row < endRow && row < gridRows; row++) {
+            for (int col = startCol; col < endCol && col < gridCols; col++) {
                 if (tiles[row][col] != null) {
                     tiles[row][col].animatePesticide();
                 }
@@ -579,8 +582,8 @@ public class GardenGridPanel extends VBox {
      * Clears all plants from the garden.
      */
     private void clearGarden() {
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 controller.removePlant(new Position(row, col));
             }
         }
@@ -597,8 +600,8 @@ public class GardenGridPanel extends VBox {
      * Handles pest spawn event - spawns pest sprite on tile.
      */
     public void onPestSpawned(Position position, String pestType, boolean isHarmful) {
-        if (position.row() >= 0 && position.row() < GRID_SIZE && 
-            position.column() >= 0 && position.column() < GRID_SIZE) {
+        if (position.row() >= 0 && position.row() < gridRows && 
+            position.column() >= 0 && position.column() < gridCols) {
             
             AnimatedTile tile = tiles[position.row()][position.column()];
             
@@ -619,8 +622,8 @@ public class GardenGridPanel extends VBox {
      * Handles pest attack event - shows damage visual.
      */
     public void onPestAttack(Position position, int damage) {
-        if (position.row() >= 0 && position.row() < GRID_SIZE && 
-            position.column() >= 0 && position.column() < GRID_SIZE) {
+        if (position.row() >= 0 && position.row() < gridRows && 
+            position.column() >= 0 && position.column() < gridCols) {
             
             AnimatedTile tile = tiles[position.row()][position.column()];
             if (tile != null && tile.isVisible()) {
@@ -637,8 +640,8 @@ public class GardenGridPanel extends VBox {
         for (var plant : zone.getPlants()) {
             if (!plant.isDead()) {
                 Position pos = plant.getPosition();
-                if (pos.row() >= 0 && pos.row() < GRID_SIZE && 
-                    pos.column() >= 0 && pos.column() < GRID_SIZE) {
+                if (pos.row() >= 0 && pos.row() < gridRows && 
+                    pos.column() >= 0 && pos.column() < gridCols) {
                     
                     AnimatedTile tile = tiles[pos.row()][pos.column()];
                     if (tile != null && tile.isVisible() && tile.hasPests()) {
@@ -653,8 +656,8 @@ public class GardenGridPanel extends VBox {
      * Handles pesticide application at a specific position.
      */
     public void onPesticideApplied(Position position) {
-        if (position.row() >= 0 && position.row() < GRID_SIZE && 
-            position.column() >= 0 && position.column() < GRID_SIZE) {
+        if (position.row() >= 0 && position.row() < gridRows && 
+            position.column() >= 0 && position.column() < gridCols) {
             
             AnimatedTile tile = tiles[position.row()][position.column()];
             if (tile != null && tile.isVisible() && tile.hasPests()) {
@@ -667,7 +670,7 @@ public class GardenGridPanel extends VBox {
      * Gets the tile at a specific position.
      */
     public AnimatedTile getTileAt(int row, int col) {
-        if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+        if (row >= 0 && row < gridRows && col >= 0 && col < gridCols) {
             return tiles[row][col];
         }
         return null;
@@ -675,8 +678,8 @@ public class GardenGridPanel extends VBox {
 
     public void setSelectedPlant(Position position) {
         selectedPlantPosition = position;
-        for (int row = 0; row < GRID_SIZE; row++) {
-            for (int col = 0; col < GRID_SIZE; col++) {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
                 if (tiles[row][col] != null) {
                     tiles[row][col].setSelected(position != null && position.row() == row && position.column() == col);
                 }
