@@ -99,15 +99,6 @@ public class GardenGridPanel extends VBox {
      */
     public void setAnimationContainer(Pane container) {
         this.animationContainer = container;
-        
-        // Also set animation container on all existing tiles
-        for (int row = 0; row < gridRows; row++) {
-            for (int col = 0; col < gridCols; col++) {
-                if (tiles[row][col] != null) {
-                    tiles[row][col].setAnimationContainer(container);
-                }
-            }
-        }
     }
     
     /**
@@ -235,10 +226,6 @@ public class GardenGridPanel extends VBox {
         AnimatedTile tile = new AnimatedTile();
         Position position = new Position(row, col);
         GrassTile grassTile = grassTiles[row][col];
-        
-        if (animationContainer != null) {
-            tile.setAnimationContainer(animationContainer);
-        }
         
         grassTile.setOnMouseClicked(e -> {
             Plant existing = controller.getGarden().getPlant(position);
@@ -444,28 +431,6 @@ public class GardenGridPanel extends VBox {
     }
     
     /**
-     * Triggers pesticide-related visual updates for tiles in the given zone.
-     */
-    public void animatePesticide(int zoneId) {
-        int zoneRow = (zoneId - 1) / 3;
-        int zoneCol = (zoneId - 1) % 3;
-        int tilesPerZone = 3;
-        
-        int startRow = zoneRow * tilesPerZone;
-        int endRow = startRow + tilesPerZone;
-        int startCol = zoneCol * tilesPerZone;
-        int endCol = startCol + tilesPerZone;
-        
-        for (int row = startRow; row < endRow && row < gridRows; row++) {
-            for (int col = startCol; col < endCol && col < gridCols; col++) {
-                if (tiles[row][col] != null) {
-                    tiles[row][col].animatePesticide();
-                }
-            }
-        }
-    }
-    
-    /**
      * Removes all plants from the model and refreshes the grid.
      */
     private void clearGarden() {
@@ -499,20 +464,6 @@ public class GardenGridPanel extends VBox {
             }
         } else {
             System.err.println("[GardenGridPanel] ERROR: Invalid position: (" + position.row() + ", " + position.column() + ")");
-        }
-    }
-    
-    /**
-     * Updates the affected tile in response to a pest attack event.
-     */
-    public void onPestAttack(Position position, int damage) {
-        if (position.row() >= 0 && position.row() < gridRows && 
-            position.column() >= 0 && position.column() < gridCols) {
-            
-            AnimatedTile tile = tiles[position.row()][position.column()];
-            if (tile != null && tile.isVisible()) {
-                tile.showDamageVisual(damage);
-            }
         }
     }
     
