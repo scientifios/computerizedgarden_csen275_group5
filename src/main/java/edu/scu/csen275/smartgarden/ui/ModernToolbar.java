@@ -21,7 +21,7 @@ public class ModernToolbar extends HBox {
         this.setAlignment(Pos.CENTER_LEFT);
         this.getStyleClass().add("toolbar");
         
-        Label title = new Label("Smart Garden");
+        Label title = new Label("Garden Sim");
         title.getStyleClass().add("title-label");
         
         Separator sep1 = new Separator();

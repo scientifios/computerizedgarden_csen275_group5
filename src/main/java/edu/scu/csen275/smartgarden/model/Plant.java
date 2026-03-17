@@ -155,7 +155,7 @@ public abstract class Plant {
         
         pestAttacks++;
         totalPestAttacks++; // Always increment total (never decreases)
-        int damage = Math.max(1, 5 - pestResistance);
+        int damage = Math.max(1, 4 - pestResistance);
         takeDamage(damage);
         
         if (pestAttacks % 5 == 0) {

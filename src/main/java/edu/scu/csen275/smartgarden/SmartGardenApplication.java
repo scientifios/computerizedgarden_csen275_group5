@@ -78,7 +78,7 @@ public class SmartGardenApplication extends Application {
             );
             
             // Setup stage
-            primaryStage.setTitle("Smart Garden Simulation - CSEN 275");
+            primaryStage.setTitle("Computerized Garden Simulation by Group 5 - CSEN 275 - Winter26");
             primaryStage.setScene(scene);
             primaryStage.setMinWidth(900);
             primaryStage.setMinHeight(600);
