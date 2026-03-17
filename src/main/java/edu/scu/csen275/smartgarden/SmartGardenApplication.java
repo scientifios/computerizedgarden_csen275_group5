@@ -361,11 +361,6 @@ public class SmartGardenApplication extends Application {
             }
 
             @Override
-            public void onPestAttack(Position position, int damage) {
-                gardenPanel.onPestAttack(position, damage);
-            }
-
-            @Override
             public void onPesticideApplied(Position position) {
                 gardenPanel.onPesticideApplied(position);
             }
@@ -454,7 +449,6 @@ public class SmartGardenApplication extends Application {
                     if (engine != null && engine.getWateringSystem() != null) {
                         engine.getWateringSystem().stopAllSprinklers();
                     }
-                    edu.scu.csen275.smartgarden.ui.SprinklerAnimationEngine.stopAllAnimations();
                 }
                 previousWeather = weather;
             }

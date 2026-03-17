@@ -15,7 +15,6 @@ public class PestEventBridge {
      */
     public interface PestAnimationHandler {
         void onPestSpawned(Position position, String pestType, boolean isHarmful);
-        void onPestAttack(Position position, int damage);
         void onPesticideApplied(Position position);
         void onPestRemoved(Position position, String pestType);
     }
@@ -33,15 +32,6 @@ public class PestEventBridge {
     public void notifyPestSpawned(Position position, String pestType, boolean isHarmful) {
         if (handler != null) {
             Platform.runLater(() -> handler.onPestSpawned(position, pestType, isHarmful));
-        }
-    }
-    
-    /**
-     * Dispatches a pest attack event.
-     */
-    public void notifyPestAttack(Position position, int damage) {
-        if (handler != null) {
-            Platform.runLater(() -> handler.onPestAttack(position, damage));
         }
     }
     

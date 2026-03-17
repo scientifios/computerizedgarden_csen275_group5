@@ -3,8 +3,6 @@ package edu.scu.csen275.smartgarden.ui;
 import edu.scu.csen275.smartgarden.model.Plant;
 import edu.scu.csen275.smartgarden.model.PlantType;
 import javafx.animation.FadeTransition;
-import javafx.animation.Interpolator;
-import javafx.animation.ScaleTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.effect.BlurType;
@@ -14,7 +12,6 @@ import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.control.Label;
 import javafx.util.Duration;
@@ -26,7 +23,6 @@ import javafx.util.Duration;
 public class AnimatedTile extends StackPane {
     private final ImageView plantImageView;
     private final StackPane baseTile;
-    private final StackPane shadowPane;
     private final HBox statusIcons;
     private final Label pestIndicator;
     private final Label waterIndicator;
@@ -35,12 +31,9 @@ public class AnimatedTile extends StackPane {
     private String currentStyle = "empty";
     private String currentPlantType;
     private Image cachedImage;
-    private ScaleTransition growthAnimation;
     private FadeTransition fadeAnimation;
     private int tileIndex;
     private boolean hasPest;
-    private boolean isWatering;
-    private Pane animationContainer;
     private long waterHintUntilMs;
     private static final long WATER_HINT_DURATION_MS = 500;
     private boolean selected;
@@ -65,12 +58,6 @@ public class AnimatedTile extends StackPane {
         this.setMinSize(BASE_SIZE, BASE_SIZE);
         this.setMaxSize(BASE_SIZE, BASE_SIZE);
         this.setAlignment(Pos.CENTER);
-
-        shadowPane = new StackPane();
-        shadowPane.setMinSize(BASE_SIZE * 0.8, 12);
-        shadowPane.setMaxSize(BASE_SIZE * 0.8, 12);
-        shadowPane.setStyle("-fx-background-color: rgba(0,0,0,0.175); -fx-background-radius: 6;");
-        shadowPane.setVisible(false);
 
         baseTile = new StackPane();
         baseTile.setMinSize(BASE_SIZE, BASE_SIZE);
@@ -100,8 +87,7 @@ public class AnimatedTile extends StackPane {
         StackPane.setAlignment(statusIcons, Pos.TOP_LEFT);
         StackPane.setMargin(statusIcons, new Insets(2, 0, 0, 2));
 
-        this.getChildren().addAll(baseTile, shadowPane, plantImageView, statusIcons);
-        StackPane.setAlignment(shadowPane, Pos.BOTTOM_CENTER);
+        this.getChildren().addAll(baseTile, plantImageView, statusIcons);
 
         setupAnimations();
     }
@@ -143,13 +129,6 @@ public class AnimatedTile extends StackPane {
     }
 
     private void setupAnimations() {
-        growthAnimation = new ScaleTransition(Duration.millis(300), plantImageView);
-        growthAnimation.setFromX(0.5);
-        growthAnimation.setFromY(0.5);
-        growthAnimation.setToX(1.0);
-        growthAnimation.setToY(1.0);
-        growthAnimation.setInterpolator(Interpolator.EASE_OUT);
-
         fadeAnimation = new FadeTransition(Duration.millis(500), this);
         fadeAnimation.setFromValue(1.0);
         fadeAnimation.setToValue(0.7);
@@ -173,13 +152,11 @@ public class AnimatedTile extends StackPane {
         plantImageView.setImage(null);
         cachedImage = null;
         currentPlantType = null;
-        shadowPane.setVisible(false);
         baseTile.setStyle(getPastelEmptyStyle());
         baseTile.setOpacity(1.0);
         safeSetEffect(baseTile, createSoftShadow());
         currentStyle = "empty";
         hasPest = false;
-        isWatering = false;
         waterHintUntilMs = 0;
         selected = false;
         this.setScaleX(1.0);
@@ -218,8 +195,6 @@ public class AnimatedTile extends StackPane {
         plantImageView.setOpacity(1.0);
         plantImageView.setScaleX(1.0);
         plantImageView.setScaleY(1.0);
-        shadowPane.setVisible(true);
-
         String healthColor = plant.getHealthColor();
         baseTile.setStyle(getPastelPlantStyle(healthColor));
         baseTile.setOpacity(1.0);
@@ -252,24 +227,6 @@ public class AnimatedTile extends StackPane {
 
         pestIndicator.setVisible(hasLivingPlant && hasPest);
         waterIndicator.setVisible(showWaterHint);
-    }
-
-    public void animateGrowth() {
-        growthAnimation.playFromStart();
-    }
-
-    public void animateWatering() {
-    }
-
-    public void startWateringAnimation() {
-        isWatering = false;
-    }
-
-    public boolean isWatering() {
-        return isWatering;
-    }
-
-    public void animatePesticide() {
     }
 
     private String getPlantImagePath(Plant plant) {
@@ -417,16 +374,9 @@ public class AnimatedTile extends StackPane {
         updateStatusIcons();
     }
 
-    public void showDamageVisual(int damage) {
-    }
-
     public void applyPesticide() {
         hasPest = false;
         updateStatusIcons();
-    }
-
-    public void setAnimationContainer(Pane container) {
-        this.animationContainer = container;
     }
 
     public boolean hasPests() {
