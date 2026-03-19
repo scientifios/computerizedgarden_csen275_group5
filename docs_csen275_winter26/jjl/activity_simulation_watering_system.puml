@@ -1,0 +1,80 @@
+@startuml Activity_Simulation_WateringSystem
+title Simulation Activity - Watering System
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ranksep 110
+skinparam nodesep 80
+skinparam Padding 18
+skinparam ArrowThickness 1
+skinparam linetype ortho
+
+start
+
+partition "SimulationEngine" {
+  :Invoke wateringSystem.checkAndWater();
+}
+
+partition "WateringSystem" {
+  :Read current weather;
+  if (Weather is RAINY?) then (yes)
+    :Skip watering cycle;
+    :Stop active sprinklers if necessary;
+    stop
+  endif
+
+  if (Water supply < minimum?) then (yes)
+    :Log low water warning;
+    stop
+  endif
+
+  :Iterate all zones;
+}
+
+while (More zones?)
+  partition "WateringSystem" {
+    :Get current zone and moisture sensor;
+
+    if (Sensor status is ERROR?) then (yes)
+      :Skip this zone;
+    else (no)
+    endif
+  }
+
+  if (Sensor status is ERROR?) then (yes)
+  else (no)
+    partition "Zone" {
+      :Collect living plants needing water;
+    }
+
+    partition "WateringSystem" {
+      if (Zone contains plants needing water?) then (yes)
+        :Resolve sprinkler and zone;
+        :Activate sprinkler;
+      else (no)
+        :Continue to next zone;
+      endif
+    }
+
+    if (Zone contains plants needing water?) then (yes)
+      fork
+        partition "Sprinkler" {
+          :Distribute water to plants;
+        }
+      fork again
+        partition "Zone" {
+          :Increase zone moisture;
+        }
+      end fork
+
+      partition "WateringSystem" {
+        :Decrease water supply;
+        :Deactivate sprinkler;
+        :Log auto-watering event;
+      }
+    endif
+  endif
+endwhile (no)
+
+stop
+@enduml

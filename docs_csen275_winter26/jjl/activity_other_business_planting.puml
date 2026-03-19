@@ -1,0 +1,65 @@
+@startuml Activity_OtherBusiness_Planting
+title Other Business Activity - Planting a Plant
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ranksep 110
+skinparam nodesep 80
+skinparam Padding 18
+skinparam ArrowThickness 1
+skinparam linetype ortho
+
+start
+partition "User" {
+  :Select plant type;
+  :Click an empty tile;
+}
+
+partition "GardenGridPanel" {
+  :Read selected plant type;
+  :Build Position(row, column);
+}
+
+partition "GardenController" {
+  :plantSeed(PlantType, Position);
+  :Create concrete Plant object;
+}
+
+partition "Garden" {
+  :Validate position;
+}
+
+if (Position invalid or occupied?) then (yes)
+  partition "GardenController" {
+    :Return false;
+  }
+  partition "GardenGridPanel" {
+    :Keep current UI state;
+  }
+  stop
+else (no)
+  partition "Garden" {
+    :Add plant into plantMap;
+    :Increase total/living counts;
+    :Locate target zone;
+  }
+endif
+
+partition "Zone" {
+  :Add plant into zone list;
+}
+
+partition "GardenController" {
+  :Return true;
+}
+
+partition "GardenGridPanel" {
+  :updateTile(row, col);
+  :Show plant tile and tooltip;
+}
+
+partition "User" {
+  :See the new plant in the garden;
+}
+stop
+@enduml
