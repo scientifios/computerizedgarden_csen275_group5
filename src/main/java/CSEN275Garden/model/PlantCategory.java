@@ -1,0 +1,11 @@
+package CSEN275Garden.model;
+
+/**
+ * Defines high-level plant categories used for UI grouping and filtering.
+ */
+public enum PlantCategory {
+    FRUIT,
+    VEGETABLE,
+    FLOWER
+}
+
