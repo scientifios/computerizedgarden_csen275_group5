@@ -1,0 +1,57 @@
+
+sequenceDiagram
+    participant Engine as SimulationEngine
+    participant Garden
+    participant Water as WateringSystem
+    participant Heat as HeatingSystem
+    participant Cool as CoolingSystem
+    participant Pest as PestControlSystem
+    participant Weather as WeatherSystem
+
+    Engine->>Engine: tick()
+    activate Engine
+    
+    Engine->>Engine: elapsedTicks++
+    Engine->>Engine: simulationTime.plusMinutes(1)
+    
+    Engine->>Garden: getAllPlants()
+    activate Garden
+    Garden-->>Engine: plants
+    deactivate Garden
+    
+    loop for each plant
+        Engine->>Engine: plant.update()
+    end
+    
+    Engine->>Water: checkAndWater()
+    activate Water
+    Water-->>Engine:
+    deactivate Water
+    
+    Engine->>Heat: update()
+    activate Heat
+    Heat-->>Engine:
+    deactivate Heat
+    
+    Engine->>Cool: update()
+    activate Cool
+    Cool-->>Engine:
+    deactivate Cool
+    
+    Engine->>Pest: update()
+    activate Pest
+    Pest-->>Engine:
+    deactivate Pest
+    
+    Engine->>Weather: update()
+    activate Weather
+    Weather-->>Engine:
+    deactivate Weather
+    
+    Engine->>Engine: autoRefillSupplies()
+    Engine->>Garden: updateLivingCount()
+    activate Garden
+    Garden-->>Engine:
+    deactivate Garden
+    
+    deactivate Engine
