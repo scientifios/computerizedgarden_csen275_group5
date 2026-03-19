@@ -17,19 +17,19 @@ partition "User" {
 
 partition "GardenGridPanel" {
   :Read selected plant type;
-  :Build Position(row, column);
+  :Build GridPosition(row, column);
 }
 
 partition "GardenController" {
-  :plantSeed(PlantType, Position);
+  :plantSeed(PlantType, GridPosition);
   :Create concrete Plant object;
 }
 
-partition "Garden" {
+partition "GardenPlot" {
   :Validate position;
 }
 
-if (Position invalid or occupied?) then (yes)
+if (GridPosition invalid or occupied?) then (yes)
   partition "GardenController" {
     :Return false;
   }
@@ -38,14 +38,14 @@ if (Position invalid or occupied?) then (yes)
   }
   stop
 else (no)
-  partition "Garden" {
+  partition "GardenPlot" {
     :Add plant into plantMap;
     :Increase total/living counts;
-    :Locate target zone;
+    :Locate target garden zone;
   }
 endif
 
-partition "Zone" {
+partition "GardenZone" {
   :Add plant into zone list;
 }
 

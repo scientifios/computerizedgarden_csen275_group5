@@ -21,7 +21,7 @@ fork
     :Calculate average temperature;
     if (Below targetMin?) then (yes)
       :Select LOW / MEDIUM / HIGH mode;
-      :Increase all zone temperatures;
+      :Increase all GardenZone temperatures;
       :Add energy consumption;
     else (no)
       if (Above targetMax or stable range?) then (yes)
@@ -40,7 +40,7 @@ fork again
     :Compute max plant temperature threshold;
     if (Average temperature > threshold?) then (yes)
       :Select LOW / MEDIUM / HIGH mode;
-      :Decrease all zone temperatures;
+      :Decrease all GardenZone temperatures;
       :Add energy consumption;
     else (no)
       :Set cooling mode OFF;

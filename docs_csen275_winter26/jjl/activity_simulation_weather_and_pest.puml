@@ -43,7 +43,7 @@ fork
   }
 
   if (Current weather is RAINY?) then (yes)
-    partition "Zone" {
+    partition "GardenZone" {
       :Increase moisture;
     }
     partition "Plant Domain" {
@@ -53,7 +53,7 @@ fork
     partition "Plant Domain" {
       :Apply current weather effect when due;
     }
-    partition "Zone" {
+    partition "GardenZone" {
       :Evaporate moisture in sunny periods;
     }
   endif
@@ -85,7 +85,7 @@ fork again
         :Reduce pest attacks and recover health;
       }
     fork again
-      partition "Zone" {
+      partition "GardenZone" {
         :Lower infestation level;
       }
     fork again

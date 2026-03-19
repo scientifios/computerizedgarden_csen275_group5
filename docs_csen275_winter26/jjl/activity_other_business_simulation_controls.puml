@@ -19,13 +19,13 @@ if (Control action?) then (Start)
     :startSimulation();
   }
   partition "SimulationEngine" {
-    if (Garden has living plants?) then (yes)
+    if (GardenPlot has living plants?) then (yes)
       :Set state RUNNING;
       :Start timeline;
     else (no)
     endif
   }
-  if (Garden has living plants?) then (yes)
+  if (GardenPlot has living plants?) then (yes)
   else (no)
     partition "UI" {
       :Show start error;

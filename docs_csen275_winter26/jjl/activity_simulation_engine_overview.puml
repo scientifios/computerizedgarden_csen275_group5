@@ -21,7 +21,7 @@ partition "GardenController" {
 
 partition "SimulationEngine" {
   :Validate simulation state;
-  if (Garden has living plants?) then (yes)
+  if (GardenPlot has living plants?) then (yes)
     :Set state = RUNNING;
     :Start JavaFX Timeline;
   else (no)
@@ -66,13 +66,13 @@ while (state == RUNNING?)
   fork again
     partition "WeatherSystem" {
       :Update weather duration or rotation;
-      :Apply weather effects to zones and plants;
+      :Apply weather effects to garden zones and plants;
     }
   end fork
 
   partition "SimulationEngine" {
     :Auto-refill water / pesticide if below threshold;
-    :Update garden living count;
+    :Update GardenPlot living count;
     if (One simulated day completed?) then (yes)
       :Increase dayCounter;
     endif

@@ -1,8 +1,3 @@
-# GUI Simulation Class Diagram
-
-Scope: only the garden GUI simulation flow is kept. API-related classes such as `GardenSimulationAPI`, `GardenSimulator`, and `HeadlessSimulationEngine` are intentionally excluded.
-
-```mermaid
 classDiagram
     class SmartGardenApplication {
         -GardenController controller
@@ -337,4 +332,3 @@ classDiagram
     Pest --> GridPosition
     Pest --> Plant
     HarmfulPest --|> Pest
-```

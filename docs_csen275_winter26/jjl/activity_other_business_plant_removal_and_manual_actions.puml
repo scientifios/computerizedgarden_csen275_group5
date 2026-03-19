@@ -17,20 +17,20 @@ partition "User" {
 
 partition "GardenGridPanel / UI" {
   :Iterate through all grid cells;
-  :Build Position for each cell;
+  :Build GridPosition for each cell;
 }
 
 partition "GardenController" {
-  :Call removePlant(Position) for each cell;
+  :Call removePlant(GridPosition) for each cell;
 }
 
-partition "Garden" {
+partition "GardenPlot" {
   :Remove existing plants from plantMap;
   :Update total/living counts;
-  :Locate containing zone for removed plants;
+  :Locate containing garden zone for removed plants;
 }
 
-partition "Zone" {
+partition "GardenZone" {
   :Remove deleted plants from zone lists;
 }
 

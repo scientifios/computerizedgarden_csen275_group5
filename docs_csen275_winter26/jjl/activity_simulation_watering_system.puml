@@ -33,7 +33,7 @@ partition "WateringSystem" {
 
 while (More zones?)
   partition "WateringSystem" {
-    :Get current zone and moisture sensor;
+    :Get current GardenZone and moisture sensor;
 
     if (Sensor status is ERROR?) then (yes)
       :Skip this zone;
@@ -43,26 +43,26 @@ while (More zones?)
 
   if (Sensor status is ERROR?) then (yes)
   else (no)
-    partition "Zone" {
+    partition "GardenZone" {
       :Collect living plants needing water;
     }
 
     partition "WateringSystem" {
-      if (Zone contains plants needing water?) then (yes)
-        :Resolve sprinkler and zone;
+      if (GardenZone contains plants needing water?) then (yes)
+        :Resolve sprinkler and GardenZone;
         :Activate sprinkler;
       else (no)
         :Continue to next zone;
       endif
     }
 
-    if (Zone contains plants needing water?) then (yes)
+    if (GardenZone contains plants needing water?) then (yes)
       fork
         partition "Sprinkler" {
           :Distribute water to plants;
         }
       fork again
-        partition "Zone" {
+        partition "GardenZone" {
           :Increase zone moisture;
         }
       end fork
