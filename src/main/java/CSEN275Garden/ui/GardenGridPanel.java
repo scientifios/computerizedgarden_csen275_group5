@@ -1,0 +1,530 @@
+package CSEN275Garden.ui;
+
+import CSEN275Garden.controller.GardenController;
+import CSEN275Garden.model.Plant;
+import CSEN275Garden.model.PlantType;
+import CSEN275Garden.model.GridPosition;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.*;
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ * UI panel that renders the garden grid and routes user interactions to the controller.
+ */
+public class GardenGridPanel extends VBox {
+    private final GardenController controller;
+    private final GridPane gardenGrid;
+    private final AnimatedTile[][] tiles;
+    private final GrassTile[][] grassTiles;
+    private ComboBox<PlantType> plantSelector;
+    private Pane animationContainer; // Container for watering animations
+    private Pane coinFloatPane; // Pane for coin float animations
+    private GridPosition selectedPlantPosition;
+    private Consumer<GridPosition> plantSelectionHandler;
+    private final int gridRows;
+    private final int gridCols;
+    
+    /**
+     * Returns the overlay pane used for transient UI effects.
+     */
+    public Pane getAnimationContainer() {
+        return animationContainer;
+    }
+    
+    /**
+     * Sets the pane used for coin/score overlay effects.
+     */
+    public void setCoinFloatPane(Pane pane) {
+        this.coinFloatPane = pane;
+    }
+
+    public void setPlantSelectionHandler(Consumer<GridPosition> plantSelectionHandler) {
+        this.plantSelectionHandler = plantSelectionHandler;
+    }
+    
+    /**
+     * Applies an effect when the node is ready (scene attached and bounds available).
+     */
+    private void safeSetEffect(javafx.scene.Node node, javafx.scene.effect.Effect effect) {
+        if (node.getScene() != null && node.getBoundsInLocal().getWidth() > 0 && node.getBoundsInLocal().getHeight() > 0) {
+            node.setEffect(effect);
+        } else {
+            node.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                if (newScene != null) {
+                    javafx.application.Platform.runLater(() -> {
+                        if (node.getBoundsInLocal().getWidth() > 0 && node.getBoundsInLocal().getHeight() > 0) {
+                            node.setEffect(effect);
+                        }
+                    });
+                }
+            });
+        }
+    }
+    
+    /**
+     * Walks the scene graph to locate a ParticleSystem and emit a burst at (x, y).
+     */
+    private void findAndTriggerSparkles(javafx.scene.Node node, double x, double y) {
+        if (node instanceof ParticleSystem) {
+            ((ParticleSystem) node).createSparkleBurst(x, y);
+        } else if (node instanceof javafx.scene.layout.Pane) {
+            javafx.scene.layout.Pane pane = (javafx.scene.layout.Pane) node;
+            for (javafx.scene.Node child : pane.getChildren()) {
+                findAndTriggerSparkles(child, x, y);
+            }
+        }
+    }
+    
+    public GardenGridPanel(GardenController controller) {
+        this.controller = controller;
+        this.gridRows = controller.getGarden().getRows();
+        this.gridCols = controller.getGarden().getColumns();
+        this.tiles = new AnimatedTile[gridRows][gridCols];
+        this.grassTiles = new GrassTile[gridRows][gridCols];
+        this.gardenGrid = new GridPane();
+        
+        setupPanel();
+        setupPlantSelector();
+        setupGrid();
+    }
+    
+    /**
+     * Sets the overlay pane used for tile-level visual hints and effects.
+     */
+    public void setAnimationContainer(Pane container) {
+        this.animationContainer = container;
+    }
+    
+    /**
+     * Initializes layout and style classes for the panel.
+     */
+    private void setupPanel() {
+        this.setSpacing(15);
+        this.setAlignment(Pos.CENTER);
+        this.getStyleClass().add("garden-panel");
+    }
+    
+    /**
+     * Builds the plant selection controls and configures the ComboBox rendering.
+     */
+    private void setupPlantSelector() {
+        HBox selectorBox = new HBox(10);
+        selectorBox.setAlignment(Pos.CENTER);
+        selectorBox.getStyleClass().add("plant-selector");
+        
+        Label selectLabel = new Label("Select Plant:");
+        selectLabel.getStyleClass().add("plant-selector-label");
+        
+        plantSelector = new ComboBox<>();
+        plantSelector.setEditable(false); // Make sure it's not editable
+        plantSelector.setDisable(false); // Ensure it's enabled
+        plantSelector.setFocusTraversable(true); // Allow focus
+        
+        // Fruits
+        plantSelector.getItems().add(PlantType.STRAWBERRY);
+        plantSelector.getItems().add(PlantType.CHERRY);
+        plantSelector.getItems().add(PlantType.APPLE);
+        
+        // Vegetable
+        plantSelector.getItems().add(PlantType.CABBAGE);
+        plantSelector.getItems().add(PlantType.TOMATO);
+        plantSelector.getItems().add(PlantType.SCALLION);
+        
+        // Flowers
+        plantSelector.getItems().add(PlantType.DAISY);
+        plantSelector.getItems().add(PlantType.LILY);
+        plantSelector.getItems().add(PlantType.PEONY);
+        
+        // Set default value
+        plantSelector.setValue(PlantType.STRAWBERRY);
+        
+        // Cell factory: show plant name only (no emoji)
+        plantSelector.setCellFactory(list -> new ListCell<PlantType>() {
+            @Override
+            protected void updateItem(PlantType item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item.getDisplayName());
+                    setGraphic(null);
+                }
+            }
+        });
+
+        // Button cell: show selected plant name only (no emoji)
+        plantSelector.setButtonCell(new ListCell<PlantType>() {
+            @Override
+            protected void updateItem(PlantType item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("Select Plant");
+                    setGraphic(null);
+                } else {
+                    setText(item.getDisplayName());
+                    setGraphic(null);
+                }
+            }
+        });
+        
+        plantSelector.setVisibleRowCount(10);
+
+        plantSelector.getStyleClass().add("modern-combo");
+        plantSelector.setPrefWidth(200);
+        
+        javafx.scene.control.Button clearBtn = new javafx.scene.control.Button("Clear All");
+        clearBtn.getStyleClass().add("modern-button");
+        clearBtn.setOnAction(e -> clearGarden());
+        
+        selectorBox.getChildren().addAll(selectLabel, plantSelector, clearBtn);
+        this.getChildren().add(selectorBox);
+    }
+    
+    /**
+     * Creates the grid layout and initializes per-cell UI nodes.
+     */
+    private void setupGrid() {
+        gardenGrid.setHgap(3);
+        gardenGrid.setVgap(3);
+        gardenGrid.getStyleClass().add("garden-grid");
+        gardenGrid.setAlignment(Pos.CENTER);
+        
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
+                // Create grass tile for empty cells
+                GrassTile grassTile = new GrassTile();
+                grassTiles[row][col] = grassTile;
+                
+                AnimatedTile tile = createTile(row, col);
+                int tileIndex = (row * gridCols + col);
+                tile.setTileIndex(tileIndex);
+                tiles[row][col] = tile;
+                tile.setVisible(false);
+                
+                StackPane tileStack = new StackPane();
+                tileStack.getChildren().addAll(grassTile, tile);
+                tileStack.setAlignment(javafx.geometry.Pos.CENTER);
+                
+                gardenGrid.add(tileStack, col, row);
+            }
+        }
+        
+        this.getChildren().add(gardenGrid);
+    }
+    
+    /**
+     * Creates and wires UI behavior for a single grid cell.
+     */
+    private AnimatedTile createTile(int row, int col) {
+        AnimatedTile tile = new AnimatedTile();
+        GridPosition position = new GridPosition(row, col);
+        GrassTile grassTile = grassTiles[row][col];
+        
+        grassTile.setOnMouseClicked(e -> {
+            Plant existing = controller.getGarden().getPlant(position);
+            
+            javafx.geometry.Bounds bounds = grassTile.localToScene(grassTile.getBoundsInLocal());
+            if (bounds != null && getAnimationContainer() != null) {
+                Pane container = getAnimationContainer();
+                if (container instanceof javafx.scene.layout.StackPane) {
+                    javafx.geometry.Bounds containerBounds = container.localToScene(
+                        container.getBoundsInLocal()
+                    );
+                    if (containerBounds != null) {
+                        double x = bounds.getCenterX() - containerBounds.getMinX();
+                        double y = bounds.getCenterY() - containerBounds.getMinY();
+                        javafx.scene.Node node = container.getScene().getRoot();
+                        findAndTriggerSparkles(node, x, y);
+                    }
+                }
+            }
+            
+            if (existing == null) {
+                PlantType selectedType = plantSelector.getValue();
+                if (selectedType != null && controller.plantSeed(selectedType, position)) {
+                    updateTile(row, col);
+                    
+                    if (grassTile.hasFlower()) {
+                        grassTile.floatPetals();
+                    }
+                }
+            } else {
+                showPlantTooltip(tile, existing);
+            }
+        });
+        
+        tile.setOnMouseClicked(e -> {
+            Plant existing = controller.getGarden().getPlant(position);
+            if (existing != null) {
+                selectPlant(position);
+                showPlantTooltip(tile, existing);
+            }
+        });
+        
+        grassTile.setOnMouseEntered(e -> {
+            if (tile.isVisible()) {
+                tile.applyHoverEffect();
+                Plant plant = controller.getGarden().getPlant(position);
+                if (plant != null) {
+                    showHoverTooltip(tile, plant);
+                }
+            } else {
+                safeSetEffect(grassTile, new javafx.scene.effect.Glow(0.2));
+            }
+        });
+        
+        grassTile.setOnMouseExited(e -> {
+            if (tile.isVisible()) {
+                tile.removeHoverEffect();
+            } else {
+                grassTile.setEffect(null);
+            }
+        });
+        
+        tile.setOnMouseEntered(e -> {
+            if (tile.isVisible()) {
+                tile.applyHoverEffect();
+                Plant plant = controller.getGarden().getPlant(position);
+                if (plant != null) {
+                    showHoverTooltip(tile, plant);
+                }
+            }
+        });
+        
+        tile.setOnMouseExited(e -> {
+            if (tile.isVisible()) {
+                tile.removeHoverEffect();
+            }
+        });
+        
+        return tile;
+    }
+    
+    /**
+     * Installs a hover tooltip describing the plant state.
+     */
+    private void showHoverTooltip(AnimatedTile tile, Plant plant) {
+        String tooltipText = String.format(
+            "Plant: %s\nHealth: %d%%\nWater: %d%%\nAge: %d days\nStage: %s",
+            plant.getPlantType(),
+            plant.getHealthLevel(),
+            plant.getWaterLevel(),
+            plant.getDaysAlive(),
+            plant.getGrowthStage().getDisplayName()
+        );
+        
+        Tooltip tooltip = new Tooltip(tooltipText);
+        Tooltip.install(tile, tooltip);
+    }
+    
+    /**
+     * Opens a detail dialog for the selected plant.
+     */
+    private void showPlantTooltip(AnimatedTile tile, Plant plant) {
+        int activePestCount = controller.getSimulationEngine()
+            .getPestControlSystem()
+            .getActivePestCountAtPosition(plant.getPosition());
+        
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+            javafx.scene.control.Alert.AlertType.INFORMATION
+        );
+        alert.setTitle("Plant Information");
+        alert.setHeaderText(plant.getPlantType() + " at " + plant.getPosition());
+        alert.setContentText(String.format(
+            "Growth Stage: %s\nHealth: %d%% (%s)\nWater Level: %d%% (Requires: %d%%)\n" +
+            "Days Alive: %d / %d\n" +
+            "Total Pest Attacks: %d (Lifetime)\n" +
+            "Active Pests: %d (Currently Attacking)\n" +
+            "Status: %s",
+            plant.getGrowthStage().getDisplayName(),
+            plant.getHealthLevel(),
+            plant.getHealthStatus(),
+            plant.getWaterLevel(),
+            plant.getWaterRequirement(),
+            plant.getDaysAlive(),
+            plant.getMaxLifespan(),
+            plant.getTotalPestAttacks(),
+            activePestCount,
+            plant.getHealthStatus()
+        ));
+        alert.showAndWait();
+    }
+    
+    /**
+     * Refreshes UI for a single grid cell based on current model state.
+     */
+    public void updateTile(int row, int col) {
+        if (row >= 0 && row < gridRows && col >= 0 && col < gridCols) {
+            GridPosition position = new GridPosition(row, col);
+            Plant plant = controller.getGarden().getPlant(position);
+            
+            if (plant == null) {
+                grassTiles[row][col].setVisible(true);
+                tiles[row][col].setVisible(false);
+            } else {
+                grassTiles[row][col].setVisible(false);
+                grassTiles[row][col].removeFlower();
+                tiles[row][col].setVisible(true);
+                tiles[row][col].update(plant);
+                tiles[row][col].setSelected(position.equals(selectedPlantPosition));
+            }
+        }
+    }
+    
+    /**
+     * Refreshes the entire grid UI.
+     */
+    public void updateAllTiles() {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
+                updateTile(row, col);
+            }
+        }
+    }
+    
+    /**
+     * Applies a brief water hint to plants within the given zone and refreshes tiles.
+     */
+    public void animateWatering(int zoneId) {
+        int zoneRow = (zoneId - 1) / 3;
+        int zoneCol = (zoneId - 1) % 3;
+        int tilesPerZone = 3;
+        
+        int startRow = zoneRow * tilesPerZone;
+        int endRow = startRow + tilesPerZone;
+        int startCol = zoneCol * tilesPerZone;
+        int endCol = startCol + tilesPerZone;
+        
+        for (int row = startRow; row < endRow && row < gridRows; row++) {
+            for (int col = startCol; col < endCol && col < gridCols; col++) {
+                GridPosition position = new GridPosition(row, col);
+                Plant plant = controller.getGarden().getPlant(position);
+                if (tiles[row][col] != null && plant != null) {
+                    tiles[row][col].showTemporaryWaterHint();
+                    tiles[row][col].update(plant);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Applies a brief water hint to all plants and refreshes tiles.
+     */
+    public void animateAllTilesWatering() {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
+                GridPosition position = new GridPosition(row, col);
+                Plant plant = controller.getGarden().getPlant(position);
+                if (tiles[row][col] != null && plant != null) {
+                    tiles[row][col].showTemporaryWaterHint();
+                    tiles[row][col].update(plant);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Removes all plants from the model and refreshes the grid.
+     */
+    private void clearGarden() {
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
+                controller.removePlant(new GridPosition(row, col));
+            }
+        }
+        updateAllTiles();
+    }
+    
+    public GridPane getGardenGrid() {
+        return gardenGrid;
+    }
+        
+    /**
+     * Updates the tile state in response to a pest spawn event.
+     */
+    public void onPestSpawned(GridPosition position, String pestType, boolean isHarmful) {
+        if (position.row() >= 0 && position.row() < gridRows && 
+            position.column() >= 0 && position.column() < gridCols) {
+            
+            AnimatedTile tile = tiles[position.row()][position.column()];
+            
+            if (tile != null && tile.isVisible()) {
+                if (isHarmful) {
+                    tile.spawnPest(pestType);
+                }
+            } else {
+                System.err.println("[GardenGridPanel] ERROR: Cannot spawn pest - tile is null or not visible");
+            }
+        } else {
+            System.err.println("[GardenGridPanel] ERROR: Invalid position: (" + position.row() + ", " + position.column() + ")");
+        }
+    }
+    
+    /**
+     * Clears pest state for plants in the given zone and refreshes affected tiles.
+     */
+    public void onPesticideApplied(CSEN275Garden.model.GardenZone zone) {
+        for (var plant : zone.getPlants()) {
+            if (!plant.isDead()) {
+                GridPosition pos = plant.getPosition();
+                if (pos.row() >= 0 && pos.row() < gridRows && 
+                    pos.column() >= 0 && pos.column() < gridCols) {
+                    
+                    AnimatedTile tile = tiles[pos.row()][pos.column()];
+                    if (tile != null && tile.isVisible() && tile.hasPests()) {
+                        tile.applyPesticide();
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Clears pest state for the tile at the given position, if applicable.
+     */
+    public void onPesticideApplied(GridPosition position) {
+        if (position.row() >= 0 && position.row() < gridRows && 
+            position.column() >= 0 && position.column() < gridCols) {
+            
+            AnimatedTile tile = tiles[position.row()][position.column()];
+            if (tile != null && tile.isVisible() && tile.hasPests()) {
+                tile.applyPesticide();
+            }
+        }
+    }
+    
+    /**
+     * Returns the tile instance for the given grid coordinates, or null if out of range.
+     */
+    public AnimatedTile getTileAt(int row, int col) {
+        if (row >= 0 && row < gridRows && col >= 0 && col < gridCols) {
+            return tiles[row][col];
+        }
+        return null;
+    }
+
+    public void setSelectedPlant(GridPosition position) {
+        selectedPlantPosition = position;
+        for (int row = 0; row < gridRows; row++) {
+            for (int col = 0; col < gridCols; col++) {
+                if (tiles[row][col] != null) {
+                    tiles[row][col].setSelected(position != null && position.row() == row && position.column() == col);
+                }
+            }
+        }
+    }
+
+    private void selectPlant(GridPosition position) {
+        setSelectedPlant(position);
+        if (plantSelectionHandler != null) {
+            plantSelectionHandler.accept(position);
+        }
+    }
+}
