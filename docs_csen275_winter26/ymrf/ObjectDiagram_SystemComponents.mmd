@@ -1,0 +1,27 @@
+
+flowchart TB
+    subgraph Engine
+        engine["engine : SimulationEngine<br/>state=RUNNING, speed=1<br/>elapsedTicks=1"]
+    end
+
+    subgraph Subsystems
+        watering["wateringSystem : WateringSystem<br/>waterSupply=10000"]
+        heating["heatingSystem : HeatingSystem<br/>mode=LOW, energy=0"]
+        cooling["coolingSystem : CoolingSystem<br/>mode=OFF, energy=0"]
+        pest["pestControlSystem : PestControlSystem<br/>pesticideStock=50"]
+        weather["weatherSystem : WeatherSystem<br/>currentWeather=SUNNY"]
+    end
+
+    garden["garden : Garden"]
+
+    engine -->|manages| garden
+    engine -->|contains| watering
+    engine -->|contains| heating
+    engine -->|contains| cooling
+    engine -->|contains| pest
+    engine -->|contains| weather
+    watering -->|reads| garden
+    heating -->|affects| garden
+    cooling -->|affects| garden
+    pest -->|monitors| garden
+    weather -->|affects| garden

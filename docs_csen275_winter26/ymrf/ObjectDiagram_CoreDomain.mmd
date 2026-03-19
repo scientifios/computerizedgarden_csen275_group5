@@ -1,0 +1,24 @@
+
+flowchart TB
+    subgraph Objects[" "]
+        ctrl["ctrl : GardenController"]
+        garden["garden : Garden"]
+        engine["engine : SimulationEngine"]
+        z1["z1 : Zone<br/>zoneId=1, moisture=50<br/>temp=20, pest=0"]
+        z2["z2 : Zone<br/>zoneId=2, moisture=50<br/>temp=20, pest=0"]
+        p1["p1 : Flower<br/>pos=(0,0), water=100<br/>health=100, stage=SEED"]
+        p2["p2 : Vegetable<br/>pos=(2,2), water=100<br/>health=100, stage=SEED"]
+        p3["p3 : Fruit<br/>pos=(4,4), water=100<br/>health=100, stage=SEED"]
+    end
+
+    ctrl -->|contains| garden
+    ctrl -->|controls| engine
+    engine -->|manages| garden
+    garden -->|zones.0| z1
+    garden -->|zones.1| z2
+    garden -->|plantMap| p1
+    garden -->|plantMap| p2
+    garden -->|plantMap| p3
+    z1 -->|plantsInZone| p1
+    z2 -->|plantsInZone| p2
+    z2 -->|plantsInZone| p3
