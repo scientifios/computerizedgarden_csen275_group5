@@ -1,0 +1,85 @@
+@startuml Activity_Simulation_PestControlSystem
+title Simulation Activity - Pest Control System
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ranksep 110
+skinparam nodesep 80
+skinparam Padding 18
+skinparam ArrowThickness 1
+skinparam linetype ortho
+
+start
+
+partition "SimulationEngine" {
+  :Invoke pestControlSystem.update();
+}
+
+partition "PestControlSystem" {
+  :Remove null pest references;
+  if (apiModeEnabled == false and spawn probability passes?) then (yes)
+    :Select a living plant;
+    :Spawn HarmfulPest at plant GridPosition;
+  endif
+}
+
+if (New pest spawned?) then (yes)
+  partition "PestEventBridge" {
+    :notifyPestSpawned(GridPosition, pestType, true);
+  }
+endif
+
+partition "PestControlSystem" {
+  :Iterate current pests;
+}
+
+while (More pests?)
+  partition "PestControlSystem" {
+    :Get current pest;
+    if (Pest alive and target plant exists?) then (yes)
+      :causeDamage(plant);
+    else (no)
+      :Remove invalid pest;
+    endif
+  }
+endwhile (no)
+
+partition "PestControlSystem" {
+  :Iterate GardenZone list;
+}
+
+while (More GardenZones?)
+  partition "PestControlSystem" {
+    :Assess threat level for current GardenZone;
+    if (Threat is HIGH or CRITICAL?) then (yes)
+      :Schedule delayed treatment;
+    endif
+  }
+
+  if (Threat is HIGH or CRITICAL?) then (yes)
+    partition "PestControlSystem" {
+      :Apply pesticide treatment;
+      :Eliminate pests in GardenZone;
+      :Decrease pesticide stock;
+      :Update infestation level;
+    }
+
+    fork
+      partition "Plant Domain" {
+        :reducePestAttacks(5) for plants in GardenZone;
+        :Recover plant health;
+      }
+    fork again
+      partition "PestEventBridge" {
+        :notifyPesticideApplied(GridPosition);
+      }
+    end fork
+  endif
+endwhile (no)
+
+partition "PestControlSystem" {
+  :Recompute infestation level for each GardenZone;
+}
+
+stop
+@enduml

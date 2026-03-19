@@ -482,4 +482,3 @@ Sensor "1" -- "1" Zone : monitors
 Sensor "1" -- "1" SensorStatus : has status
 
 @enduml
-
