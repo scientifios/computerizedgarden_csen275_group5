@@ -1,0 +1,56 @@
+%%{init: {"theme":"neo"}}%%
+
+flowchart LR
+  GM[Garden Manager]:::actor
+  API[API Client]:::actor
+
+  UC_PlantType((Select Plant Type))
+  UC_Plant((Plant in Empty Cell))
+  UC_Hover((Hover Plant Tooltip))
+  UC_Detail((Click Plant Details<br/>Plant Information Dialog))
+  UC_Clear((Clear All Plants))
+
+  UC_Start((Start Simulation))
+  UC_Toggle((Pause/Resume Simulation<br/>Toggle))
+  UC_Stop((Stop Simulation))
+  UC_Speed((Change Simulation Speed))
+  UC_Logs((View Event Log<br/>Recent Events List))
+
+  UC_API_Init((API Initialize Garden<br/>initializeGarden))
+  UC_API_Start((API Start Headless Simulation<br/>startHeadlessSimulation))
+  UC_API_Rain((Trigger Rain Event<br/>rain amount))
+  UC_API_Temp((Trigger Temperature Event<br/>temperature tempF))
+  UC_API_Parasite((Trigger Parasite Infestation<br/>parasite type))
+  UC_API_Plants((Get Plants Info<br/>getPlants))
+  UC_API_State((Get State Snapshot<br/>getState))
+
+  GM --> UC_PlantType
+  GM --> UC_Plant
+  GM --> UC_Hover
+  GM --> UC_Detail
+  GM --> UC_Clear
+
+  GM --> UC_Start
+  GM --> UC_Toggle
+  GM --> UC_Stop
+  GM --> UC_Speed
+  GM --> UC_Logs
+
+  API --> UC_API_Init
+  API --> UC_API_Start
+  API --> UC_API_Rain
+  API --> UC_API_Temp
+  API --> UC_API_Parasite
+  API --> UC_API_Plants
+  API --> UC_API_State
+
+  UC_Plant --> UC_PlantType
+
+  classDef actor fill:#EEF3FF,stroke:#3B5BDB,stroke-width:1px,color:#0B1B44;
+
+  %% Use-case node styling (override default theme colors for readability)
+  classDef usecase fill:#0B1220,stroke:#93C5FD,stroke-width:1.2px,color:#E5E7EB;
+
+  class UC_PlantType,UC_Plant,UC_Hover,UC_Detail,UC_Clear,UC_Start,UC_Toggle,UC_Stop,UC_Speed,UC_Logs usecase;
+  class UC_API_Init,UC_API_Start,UC_API_Rain,UC_API_Temp,UC_API_Parasite,UC_API_Plants,UC_API_State usecase;
+

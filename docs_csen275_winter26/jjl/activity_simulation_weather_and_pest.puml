@@ -1,0 +1,100 @@
+@startuml Activity_Simulation_WeatherAndPest
+title Simulation Activity - Weather and Pest Control
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ranksep 110
+skinparam nodesep 80
+skinparam Padding 18
+skinparam ArrowThickness 1
+skinparam linetype ortho
+
+start
+
+partition "SimulationEngine" {
+  :Invoke weatherSystem.update() and pestControlSystem.update();
+}
+
+fork
+  partition "WeatherSystem" {
+    :Check rotation mode and weatherDuration;
+    if (Weather should change?) then (yes)
+      :Generate / rotate next weather;
+      :Set garden weather;
+    endif
+  }
+
+  if (Weather should change?) then (yes)
+    fork
+      partition "HeatingSystem" {
+        :Set ambient temperature baseline;
+      }
+    fork again
+      partition "CoolingSystem" {
+        :Set ambient temperature baseline;
+      }
+    end fork
+  endif
+
+  partition "WeatherSystem" {
+    if (Current weather is RAINY?) then (yes)
+    else (no)
+    endif
+  }
+
+  if (Current weather is RAINY?) then (yes)
+    partition "GardenZone" {
+      :Increase moisture;
+    }
+    partition "Plant Domain" {
+      :Apply rainy weather effect;
+    }
+  else (no)
+    partition "Plant Domain" {
+      :Apply current weather effect when due;
+    }
+    partition "GardenZone" {
+      :Evaporate moisture in sunny periods;
+    }
+  endif
+fork again
+  partition "PestControlSystem" {
+    if (Random spawn condition met?) then (yes)
+      :Spawn harmful pest near a living plant;
+    endif
+  }
+
+  if (Random spawn condition met?) then (yes)
+    partition "PestEventBridge" {
+      :Notify UI pest spawned;
+    }
+  endif
+
+  partition "PestControlSystem" {
+    :Apply pest damage to target plants;
+    :Assess threat for each active zone;
+    if (Threat is HIGH or CRITICAL?) then (yes)
+      :Schedule treatment;
+      :Apply pesticide in target zone;
+    endif
+  }
+
+  if (Threat is HIGH or CRITICAL?) then (yes)
+    fork
+      partition "Plant Domain" {
+        :Reduce pest attacks and recover health;
+      }
+    fork again
+      partition "GardenZone" {
+        :Lower infestation level;
+      }
+    fork again
+      partition "PestEventBridge" {
+        :Notify UI pesticide applied;
+      }
+    end fork
+  endif
+end fork
+
+stop
+@enduml

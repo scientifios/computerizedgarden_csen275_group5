@@ -1,0 +1,51 @@
+
+sequenceDiagram
+    actor User
+    participant View as GardenGridPanel
+    participant Controller as GardenController
+    participant Garden
+    participant Plant
+    participant Zone
+    participant Log as Logger
+
+    User->>View: Click cell + select plant type (e.g., Daisy)
+    activate View
+    
+    View->>Controller: plantSeed(PlantType.DAISY, Position(row, col))
+    activate Controller
+    
+    Note over Controller: createPlant → new Flower(position, "Daisy")
+    Controller->>Plant: new Flower(position, "Daisy")
+    activate Plant
+    Plant-->>Controller: plant
+    deactivate Plant
+    
+    Controller->>Garden: addPlant(plant)
+    activate Garden
+    
+    Garden->>Garden: plantMap.put(position, plant)
+    Garden->>Zone: findZoneContaining(position)
+    activate Zone
+    Zone-->>Garden: zone
+    deactivate Zone
+    
+    Garden->>Zone: addPlant(plant)
+    activate Zone
+    Zone-->>Garden:
+    deactivate Zone
+    
+    Garden->>Garden: updateLivingCount()
+    Garden-->>Controller: true
+    deactivate Garden
+    
+    Controller->>Log: log(INFO, "Plant Daisy added at (r,c)")
+    activate Log
+    Log-->>Controller:
+    deactivate Log
+    
+    Controller-->>View: true
+    deactivate Controller
+    
+    View->>View: refreshGrid()
+    View-->>User: Show plant sprite at cell
+    deactivate View

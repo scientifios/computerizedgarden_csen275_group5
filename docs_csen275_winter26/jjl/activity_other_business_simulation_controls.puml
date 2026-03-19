@@ -1,0 +1,98 @@
+@startuml Activity_OtherBusiness_SimulationControls
+title Other Business Activity - Simulation Controls
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ranksep 110
+skinparam nodesep 80
+skinparam Padding 18
+skinparam ArrowThickness 1
+skinparam linetype ortho
+
+start
+
+if (Control action?) then (Start)
+  partition "User" {
+    :Click Start;
+  }
+  partition "GardenController" {
+    :startSimulation();
+  }
+  partition "SimulationEngine" {
+    if (GardenPlot has living plants?) then (yes)
+      :Set state RUNNING;
+      :Start timeline;
+    else (no)
+    endif
+  }
+  if (GardenPlot has living plants?) then (yes)
+  else (no)
+    partition "UI" {
+      :Show start error;
+    }
+  endif
+
+elseif (Pause)
+  partition "User" {
+    :Click Pause;
+  }
+  partition "GardenController" {
+    :pauseSimulation();
+  }
+  partition "SimulationEngine" {
+    :Set state PAUSED;
+    :Pause timeline;
+  }
+  partition "UI" {
+    :Switch button label to Resume;
+  }
+
+elseif (Resume)
+  partition "User" {
+    :Click Resume;
+  }
+  partition "GardenController" {
+    :resumeSimulation();
+  }
+  partition "SimulationEngine" {
+    :Set state RUNNING;
+    :Resume timeline;
+  }
+  partition "UI" {
+    :Switch button label back to Pause;
+  }
+
+elseif (Stop)
+  partition "User" {
+    :Click Stop;
+  }
+  partition "GardenController" {
+    :stopSimulation();
+  }
+  partition "SimulationEngine" {
+    :Set state STOPPED;
+    :Stop timeline;
+    :Log final statistics;
+  }
+  partition "UI" {
+    :Reset toolbar state;
+  }
+
+elseif (Change Speed)
+  partition "User" {
+    :Select simulation speed;
+  }
+  partition "GardenController" {
+    :setSimulationSpeed(multiplier);
+  }
+  partition "SimulationEngine" {
+    :Validate 1..10 range;
+    :Update timeline rate;
+  }
+  partition "UI" {
+    :Display new running speed;
+  }
+endif
+
+stop
+@enduml

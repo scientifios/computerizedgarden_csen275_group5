@@ -1,0 +1,43 @@
+@startuml Activity_OtherBusiness_ClearAllPlants
+title Other Business Activity - Clear All Plants
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ranksep 110
+skinparam nodesep 80
+skinparam Padding 18
+skinparam ArrowThickness 1
+skinparam linetype ortho
+
+start
+
+partition "User" {
+  :Click Clear All;
+}
+
+partition "GardenGridPanel / UI" {
+  :Iterate through all grid cells;
+  :Build GridPosition for each cell;
+}
+
+partition "GardenController" {
+  :Call removePlant(GridPosition) for each cell;
+}
+
+partition "GardenPlot" {
+  :Remove existing plants from plantMap;
+  :Update total/living counts;
+  :Locate containing garden zone for removed plants;
+}
+
+partition "GardenZone" {
+  :Remove deleted plants from zone lists;
+}
+
+partition "GardenGridPanel / UI" {
+  :updateAllTiles();
+  :Show empty grass tiles again;
+}
+
+stop
+@enduml

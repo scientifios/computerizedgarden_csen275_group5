@@ -1,0 +1,98 @@
+@startuml Activity_SimulationEngine_Overview
+title Garden GUI Simulation - Overview Activity
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ranksep 110
+skinparam nodesep 80
+skinparam Padding 18
+skinparam ArrowThickness 1
+skinparam linetype ortho
+
+start
+
+partition "User / UI" {
+  :Click Start;
+}
+
+partition "GardenController" {
+  :startSimulation();
+}
+
+partition "SimulationEngine" {
+  :Validate simulation state;
+  if (GardenPlot has living plants?) then (yes)
+    :Set state = RUNNING;
+    :Start JavaFX Timeline;
+  else (no)
+    :Reject start request;
+    stop
+  endif
+}
+
+while (state == RUNNING?)
+  partition "SimulationEngine" {
+    :tick();
+    :Increment elapsedTicks;
+    :Advance simulationTime by 1 minute;
+  }
+
+  fork
+    partition "Plant Domain" {
+      :Update every plant state;
+      :Consume water and recalculate health;
+    }
+  fork again
+    partition "WateringSystem" {
+      :Check rain condition and water supply;
+      :Auto-water zones needing water;
+    }
+  fork again
+    partition "HeatingSystem" {
+      :Read zone temperatures;
+      :Activate or deactivate heating;
+    }
+  fork again
+    partition "CoolingSystem" {
+      :Read zone temperatures;
+      :Activate or deactivate cooling;
+    }
+  fork again
+    partition "PestControlSystem" {
+      :Spawn pests if needed;
+      :Apply pest damage;
+      :Assess and treat dangerous zones;
+    }
+  fork again
+    partition "WeatherSystem" {
+      :Update weather duration or rotation;
+      :Apply weather effects to garden zones and plants;
+    }
+  end fork
+
+  partition "SimulationEngine" {
+    :Auto-refill water / pesticide if below threshold;
+    :Update GardenPlot living count;
+    if (One simulated day completed?) then (yes)
+      :Increase dayCounter;
+    endif
+  }
+
+  if (One simulated day completed?) then (yes)
+    partition "Plant Domain" {
+      :advanceDay() for all plants;
+    }
+  endif
+
+  partition "UI" {
+    :Refresh grid, weather, logs, and side panels;
+  }
+endwhile (no)
+
+partition "SimulationEngine" {
+  :Stop Timeline;
+  :Log simulation statistics;
+}
+
+stop
+@enduml

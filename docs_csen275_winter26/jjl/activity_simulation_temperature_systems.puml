@@ -1,0 +1,56 @@
+@startuml Activity_Simulation_TemperatureSystems
+title Simulation Activity - Heating and Cooling Systems
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam ranksep 110
+skinparam nodesep 80
+skinparam Padding 18
+skinparam ArrowThickness 1
+skinparam linetype ortho
+
+start
+
+partition "SimulationEngine" {
+  :Invoke heatingSystem.update() and coolingSystem.update();
+}
+
+fork
+  partition "HeatingSystem" {
+    :Read temperature sensors;
+    :Calculate average temperature;
+    if (Below targetMin?) then (yes)
+      :Select LOW / MEDIUM / HIGH mode;
+      :Increase all GardenZone temperatures;
+      :Add energy consumption;
+    else (no)
+      if (Above targetMax or stable range?) then (yes)
+        :Set heating mode OFF;
+      endif
+    endif
+  }
+
+  partition "Plant Domain" {
+    :Apply temperature effect to plants by zone;
+  }
+fork again
+  partition "CoolingSystem" {
+    :Read temperature sensors;
+    :Calculate average temperature;
+    :Compute max plant temperature threshold;
+    if (Average temperature > threshold?) then (yes)
+      :Select LOW / MEDIUM / HIGH mode;
+      :Decrease all GardenZone temperatures;
+      :Add energy consumption;
+    else (no)
+      :Set cooling mode OFF;
+    endif
+  }
+
+  partition "Plant Domain" {
+    :Apply temperature effect to plants by zone;
+  }
+end fork
+
+stop
+@enduml
