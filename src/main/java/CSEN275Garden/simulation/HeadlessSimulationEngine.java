@@ -35,7 +35,7 @@ public class HeadlessSimulationEngine {
     
     private static final Logger logger = Logger.getInstance();
     private static final int BASE_TICK_INTERVAL_MS = 1000; // 1 second real time = 1 minute sim time
-    private static final int TICKS_PER_SIM_DAY = 60; // 1440 minutes in a day
+    private static final int TICKS_PER_SIM_DAY = 3600; // api adaption; 60min = 1 day
     
     // Active instances for JVM shutdown cleanup
     private static final Set<HeadlessSimulationEngine> activeInstances = ConcurrentHashMap.newKeySet();
