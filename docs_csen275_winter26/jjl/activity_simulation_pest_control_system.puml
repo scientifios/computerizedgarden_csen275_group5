@@ -17,10 +17,6 @@ partition "SimulationEngine" {
 
 partition "PestControlSystem" {
   :Remove null pest references;
-  if (apiModeEnabled == false and spawn probability passes?) then (yes)
-    :Select a living plant;
-    :Spawn HarmfulPest at plant GridPosition;
-  endif
 }
 
 if (New pest spawned?) then (yes)
